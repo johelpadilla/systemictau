@@ -1,0 +1,12 @@
+README.md
+pyproject.toml
+src/systemictau/__init__.py
+src/systemictau/core.py
+src/systemictau/fractal.py
+src/systemictau/layers.py
+src/systemictau/recd.py
+src/systemictau.egg-info/PKG-INFO
+src/systemictau.egg-info/SOURCES.txt
+src/systemictau.egg-info/dependency_links.txt
+src/systemictau.egg-info/requires.txt
+src/systemictau.egg-info/top_level.txt

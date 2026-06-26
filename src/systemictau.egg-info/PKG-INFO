@@ -1,0 +1,21 @@
+Metadata-Version: 2.4
+Name: systemictau
+Version: 0.1.0
+Summary: Systemic Tau and Discrete Extramental Clock (RECD) implementation
+Author-email: Johel Padilla-Villanueva <joel.padilla2@upr.edu>
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+Requires-Dist: numpy>=1.20.0
+Requires-Dist: scipy>=1.7.0
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0.0; extra == "dev"
+
+# Systemic Tau and RECD
+
+Python implementation of the Systemic Tau paradigm and the Discrete Extramental Clock (RECD).
+
+This package implements:
+- Ordinal Systemic Tau computation (`core.py`)
+- RECD increment and gated accumulation logic (`recd.py`)
+- The Three-Layer Ontology: local intensification, relational coherence, and structural reorganization (`layers.py`)
+- Fractal dimension estimation of generated extramental time (`fractal.py`)

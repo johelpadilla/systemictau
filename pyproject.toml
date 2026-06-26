@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "systemictau"
+version = "0.1.0"
+description = "Systemic Tau and Discrete Extramental Clock (RECD) implementation"
+authors = [
+    {name = "Johel Padilla-Villanueva", email = "joel.padilla2@upr.edu"}
+]
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "numpy>=1.20.0",
+    "scipy>=1.7.0"
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0.0"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
