@@ -1,4 +1,4 @@
-__version__ = "2.0.0"
+__version__ = "2.0.1"
 from .core import compute_taus
 from .recd import compute_recd_increments, accumulate_time, gate_function
 from .layers import (
