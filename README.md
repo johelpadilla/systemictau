@@ -1,9 +1,68 @@
-# Systemic Tau and RECD
+# Systemic Tau & Discrete Extramental Clock (RECD)
 
-Python implementation of the Systemic Tau paradigm and the Discrete Extramental Clock (RECD).
+[![PyPI version](https://badge.fury.io/py/systemictau.svg)](https://badge.fury.io/py/systemictau)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-This package implements:
-- Ordinal Systemic Tau computation (`core.py`)
-- RECD increment and gated accumulation logic (`recd.py`)
-- The Three-Layer Ontology: local intensification, relational coherence, and structural reorganization (`layers.py`)
-- Fractal dimension estimation of generated extramental time (`fractal.py`)
+**`systemictau`** is a Python package implementing the mathematical and ontological framework of the **Systemic Tau paradigm** and the **Discrete Extramental Clock (RECD)**, developed by Dr. Johel Padilla-Villanueva.
+
+This package offers a novel, non-reductive approach for time series analysis in complex systems, shifting from classical variance-based early-warning signals to purely **ordinal** observables. It proves that time is not a homogeneous container (Chronos) but an emergent, generated metric dependent on the system's own structural reorganization (Kairos).
+
+## Core Concepts
+
+The package operationalizes the three-layer ontological framework detailed in the *Magna Synthesis*:
+1. **Capa 1 (Local Intensification):** Measures local persistence through hyper-persistence of ordinal states and structural trapping (RQA).
+2. **Capa 2 (Relational Coherence):** Identifies *Joint Episodes* (relational kairoi) by measuring the anti-synchronization across modules.
+3. **Capa 3 (Ontological Ascent):** Detects the exact moment of global structural reorganization through Kolmogorov-Smirnov contrasts and Frobenius norm shifts, indicating the emergence of a new law of temporal discreteness.
+
+## Installation
+
+You can install the package directly from PyPI:
+
+```bash
+pip install systemictau
+```
+
+## Quickstart
+
+```python
+import numpy as np
+import systemictau as st
+
+# 1. Provide your multivariate time series data
+# X = np.array([...]) # Shape: (T_steps, N_components)
+np.random.seed(42)
+X = np.random.randn(500, 4)
+
+# 2. Compute the Systemic Tau over sliding windows
+taus_global, taus_per_module = st.compute_taus(X, window_size=13)
+
+# 3. Accumulate the Discrete Extramental Time (RECD)
+T_series, dtk_series, gate_series, depths = st.accumulate_time(taus_global)
+
+# 4. Extract Relational Windows (Joint Episodes)
+hp_z, core_hyper = st.hyper_persistence(taus_global)
+lam, tt = st.rolling_rqa(taus_global)
+M_series = st.critical_mass_metric(hp_z, lam, tt)
+
+A_series = st.compute_antisynchronization(taus_per_module)
+episodes = st.extract_joint_episodes(A_series, M_series)
+
+# 5. Detect Capa 3 Reorganization (Ontological Ascent)
+t_frob, max_dist = st.detect_reorganization_frob(taus_per_module)
+t_ks, max_ks = st.detect_reorganization_ks(dtk_series)
+t_star = st.consensus_transition(t_frob, t_ks)
+
+print(f"Capa 3 Transition detected at t* = {t_star}")
+```
+
+## Citation
+
+If you use this package in your research, please cite the foundational work:
+
+> Padilla-Villanueva, Johel. (2026). *Síntesis Magna del Tau Sistémico*. Version v6. Zenodo. DOI: 10.5281/zenodo.20576241
+
+For a full list of references and mathematical proofs, consult the [Zenodo Archive](https://doi.org/10.5281/zenodo.20576241).
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details. The underlying theoretical corpus is published under CC-BY 4.0.

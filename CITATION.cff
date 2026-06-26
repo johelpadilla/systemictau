@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "If you use this software in your research, please cite the theoretical corpus as below."
+authors:
+  - family-names: "Padilla-Villanueva"
+    given-names: "Johel"
+    orcid: "https://orcid.org/0000-0002-5797-6931"
+title: "Síntesis Magna del Tau Sistémico"
+version: "v6"
+doi: "10.5281/zenodo.20576241"
+date-released: 2026-06-01
+url: "https://doi.org/10.5281/zenodo.20576241"
+preferred-citation:
+  type: report
+  authors:
+    - family-names: "Padilla-Villanueva"
+      given-names: "Johel"
+  title: "Síntesis Magna del Tau Sistémico. Version v6."
+  year: 2026
+  doi: "10.5281/zenodo.20576241"
