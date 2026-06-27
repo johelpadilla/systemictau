@@ -73,16 +73,21 @@ class SystemicTauApp(BaseApp):
         self.target_label = ctk.CTkLabel(self.sidebar_frame, text="Target Parameter (τ_s):", anchor="w")
         self.target_label.grid(row=4, column=0, padx=20, pady=(10, 0))
         self.target_menu = ctk.CTkOptionMenu(self.sidebar_frame, values=["[Load File First]"], command=self._redraw_preview)
-        self.target_menu.grid(row=5, column=0, padx=20, pady=(10, 20))
+        self.target_menu.grid(row=5, column=0, padx=20, pady=(10, 10))
+        
+        # AI Epistemic Engine Switch
+        self.run_ai_switch = ctk.CTkSwitch(self.sidebar_frame, text="Enable AI Agents")
+        self.run_ai_switch.grid(row=6, column=0, padx=20, pady=(10, 20))
+        # Default is off (0)
         
         if HAS_DND:
             self.dnd_label = ctk.CTkLabel(self.sidebar_frame, text="[Drag & Drop Active]", text_color="green", font=ctk.CTkFont(size=10))
-            self.dnd_label.grid(row=6, column=0, padx=20, pady=5)
+            self.dnd_label.grid(row=7, column=0, padx=20, pady=5)
             self.drop_target_register(DND_FILES)
             self.dnd_bind('<<Drop>>', self.handle_dnd)
             
         self.advanced_btn = ctk.CTkButton(self.sidebar_frame, text="Advanced Settings", state="disabled", command=self.open_advanced_settings)
-        self.advanced_btn.grid(row=7, column=0, padx=20, pady=20, sticky="s")
+        self.advanced_btn.grid(row=8, column=0, padx=20, pady=20, sticky="s")
 
         # -------------------------------------
         # MAIN FRAME
@@ -273,26 +278,35 @@ class SystemicTauApp(BaseApp):
             self.after(0, self._highlight_graph)
             
             msg = f"Structural break detected in '{target_col}' (Tau_s={tau_val:.2f}) at index {t_star}."
+            
+            # --- DETERMINISTIC REPORT (NO AI) ---
             self._update_results(f"[MATHEMATICS] {msg}\\n")
-            self._update_results("\\n[EPISTEMIC ENGINE] Booting Hierarchical Multi-Agent Discovery...\\n")
+            self._generate_deterministic_report()
             
-            # Check API Key
-            current_key = settings.google_api_key
-            if not current_key or current_key == "DUMMY_GEMINI_KEY":
-                self._update_results("      -> API Key missing. Requesting from user...\\n")
-                self.after(0, self._prompt_for_api_key)
-                return
+            # --- OPTIONAL AI EPISTEMIC ENGINE ---
+            if self.run_ai_switch.get() == 1:
+                self._update_results("\\n[EPISTEMIC ENGINE] Booting Hierarchical Multi-Agent Discovery...\\n")
+                
+                # Check API Key
+                current_key = settings.google_api_key
+                if not current_key or current_key == "DUMMY_GEMINI_KEY":
+                    self._update_results("      -> API Key missing. Requesting from user...\\n")
+                    self.after(0, self._prompt_for_api_key)
+                    return
 
-            context = f"Domain: '{self.domain_menu.get()}'. {msg}."
-            
-            hypothesis, confidence = run_discovery_engine_sync(
-                context=context, 
-                tau_val=tau_val, 
-                update_callback=self._update_results
-            )
-            
-            self._update_results("\\n[COMPLETE] Autonomous analysis finalized.\\n")
-            self.last_hypothesis = hypothesis
+                context = f"Domain: '{self.domain_menu.get()}'. {msg}."
+                
+                hypothesis, confidence = run_discovery_engine_sync(
+                    context=context, 
+                    tau_val=tau_val, 
+                    update_callback=self._update_results
+                )
+                self.last_hypothesis = hypothesis
+            else:
+                self._update_results("\\n[NOTE] AI Epistemic Engine is disabled. Pure mathematical interpretation complete.\\n")
+                self.last_hypothesis = "AI Engine was disabled. Review the deterministic mathematical report above."
+                
+            self._update_results("\\n[COMPLETE] Analysis finalized.\\n")
             
         except Exception as e:
             if "API key not valid" in str(e):
@@ -336,6 +350,34 @@ class SystemicTauApp(BaseApp):
         self.lbl_entropy.configure(text=f"Max S_e: {s['max_entropy']:.2e}")
         self.lbl_coherence.configure(text=f"Min C_s: {s['min_coherence']:.2f}")
         self.lbl_tstar.configure(text=f"t* Index: {t_star}")
+
+    def _generate_deterministic_report(self):
+        s = self.math_stats
+        t_star = s['t_star']
+        target_col = s['target_col']
+        
+        report = (
+            f"\\n--- STRUCTURAL DIAGNOSIS REPORT ---\\n"
+            f"1. TOPOLOGICAL REORGANIZATION (τ_s):\\n"
+            f"   A critical structural break (t*) was isolated at sequence index [{t_star}].\\n"
+            f"   The absolute magnitude (variance) of the anomaly for '{target_col}' peaked at {s['tau_val']:.2e}.\\n"
+            f"   According to Systemic Tau, this signifies the exact moment the system crossed its structural mass threshold.\\n\\n"
+            
+            f"2. ACCELERATION MOMENTUM (a_t):\\n"
+            f"   The second derivative (a_t) reached a critical peak of {s['max_accel']:.2e}.\\n"
+            f"   This indicates extreme systemic momentum precipitating the topological collapse.\\n\\n"
+            
+            f"3. ENTROPIC DECAY (S_e):\\n"
+            f"   The rolling volatility (Entropic Decay) maxed out at {s['max_entropy']:.2e}.\\n"
+            f"   This reveals that prior to t*, the internal chaos of '{target_col}' built up uncontrollably,\\n"
+            f"   forcing the system to shed complexity to survive.\\n\\n"
+            
+            f"4. SYSTEMIC COHERENCE (C_s):\\n"
+            f"   The extramental coherence dropped to {s['min_coherence']:.2f}.\\n"
+            f"   A drop in coherence mathematically proves that internal variables are decoupling.\\n"
+            f"---------------------------------------\\n"
+        )
+        self._update_results(report)
 
     def _prompt_for_api_key(self):
         dialog = ctk.CTkInputDialog(text="Enter your Google Gemini API Key:", title="API Key Required")
