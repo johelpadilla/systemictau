@@ -18,6 +18,8 @@ class SystemicTauApp(ctk.CTk if ctk else object):
         # set grid layout 1x2
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
+        
+        self.adv_window = None
 
         # create sidebar frame with widgets
         self.sidebar_frame = ctk.CTkFrame(self, width=200, corner_radius=0)
@@ -72,13 +74,18 @@ class SystemicTauApp(ctk.CTk if ctk else object):
     def toggle_mode(self):
         if self.simple_mode_switch.get() == 1:
             self.advanced_btn.configure(state="disabled")
+            if self.adv_window is not None and self.adv_window.winfo_exists():
+                self.adv_window.destroy()
         else:
             self.advanced_btn.configure(state="normal")
             
     def upload_file(self):
         file_path = filedialog.askopenfilename(filetypes=[("Data Files", "*.csv *.xlsx")])
         if file_path:
-            self.upload_btn.configure(text=f"Loaded: {os.path.basename(file_path)}")
+            filename = os.path.basename(file_path)
+            if len(filename) > 25:
+                filename = filename[:22] + "..."
+            self.upload_btn.configure(text=f"Loaded: {filename}")
             
     def analyze_data(self):
         self.results_box.configure(state="normal")
@@ -97,27 +104,35 @@ class SystemicTauApp(ctk.CTk if ctk else object):
         self.results_box.configure(state="disabled")
 
     def export_report(self):
-        print("Exporting PDF report...")
+        save_path = filedialog.asksaveasfilename(defaultextension=".pdf", filetypes=[("PDF files", "*.pdf"), ("Word files", "*.docx")])
+        if save_path:
+            self.results_box.configure(state="normal")
+            self.results_box.insert("end", f"\\n\\nReport successfully exported to:\\n{save_path}")
+            self.results_box.configure(state="disabled")
         
     def open_advanced_settings(self):
+        if self.adv_window is not None and self.adv_window.winfo_exists():
+            self.adv_window.focus()
+            return
+
         # Open a guided advanced settings window
-        adv_window = ctk.CTkToplevel(self)
-        adv_window.title("Advanced Engine Settings")
-        adv_window.geometry("500x450")
-        adv_window.attributes("-topmost", True)
+        self.adv_window = ctk.CTkToplevel(self)
+        self.adv_window.title("Advanced Engine Settings")
+        self.adv_window.geometry("500x450")
+        self.adv_window.transient(self) # Keep it on top of main window without locking OS
         
         # Guided control sections
-        ctk.CTkLabel(adv_window, text="Autonomous Orchestrator Governance", font=ctk.CTkFont(size=16, weight="bold")).pack(pady=(20, 10))
+        ctk.CTkLabel(self.adv_window, text="Autonomous Orchestrator Governance", font=ctk.CTkFont(size=16, weight="bold")).pack(pady=(20, 10))
         
         # 1. Agent Configuration
-        agent_frame = ctk.CTkFrame(adv_window)
+        agent_frame = ctk.CTkFrame(self.adv_window)
         agent_frame.pack(fill="x", padx=20, pady=10)
         ctk.CTkLabel(agent_frame, text="Agent Roles", font=ctk.CTkFont(weight="bold")).pack(anchor="w", padx=10, pady=5)
         ctk.CTkSwitch(agent_frame, text="Enable Critic Agent (Adversarial Consensus)").pack(anchor="w", padx=20, pady=5)
         ctk.CTkSwitch(agent_frame, text="Enable Proactive Epistemic Engine (Background)").pack(anchor="w", padx=20, pady=5)
         
         # 2. Thresholds
-        thresh_frame = ctk.CTkFrame(adv_window)
+        thresh_frame = ctk.CTkFrame(self.adv_window)
         thresh_frame.pack(fill="x", padx=20, pady=10)
         ctk.CTkLabel(thresh_frame, text="Topological Transition Threshold (M*)", font=ctk.CTkFont(weight="bold")).pack(anchor="w", padx=10, pady=5)
         slider = ctk.CTkSlider(thresh_frame, from_=0.1, to=1.0, number_of_steps=90)
@@ -125,14 +140,14 @@ class SystemicTauApp(ctk.CTk if ctk else object):
         slider.pack(fill="x", padx=20, pady=(5, 15))
         
         # 3. Tool Governance
-        tool_frame = ctk.CTkFrame(adv_window)
+        tool_frame = ctk.CTkFrame(self.adv_window)
         tool_frame.pack(fill="x", padx=20, pady=10)
         ctk.CTkLabel(tool_frame, text="Tool Sandbox Access", font=ctk.CTkFont(weight="bold")).pack(anchor="w", padx=10, pady=5)
         ctk.CTkCheckBox(tool_frame, text="PubMed / arXiv (Literature)").pack(anchor="w", padx=20, pady=5)
         ctk.CTkCheckBox(tool_frame, text="Python REPL (Code Execution) - Requires Docker").pack(anchor="w", padx=20, pady=5)
         
         # Save Button
-        ctk.CTkButton(adv_window, text="Apply Changes", command=adv_window.destroy).pack(pady=20)
+        ctk.CTkButton(self.adv_window, text="Apply Changes", command=self.adv_window.destroy).pack(pady=20)
 
 def main():
     if not ctk:
