@@ -1,6 +1,9 @@
 import numpy as np
 import scipy.stats as stats
 import itertools
+from dataclasses import dataclass, field
+from typing import Dict, Any, Tuple
+import time
 
 def _kendall_tau_fast(x, y):
     """
@@ -66,3 +69,59 @@ def compute_taus(X, window_size=13):
             taus_per_module[t, i] = np.mean(tau_matrix[i, mask])
             
     return taus_global, taus_per_module
+
+
+@dataclass
+class SystemicTauResult:
+    """
+    Data class representing the result of a Systemic Tau computation.
+    """
+    taus_global: np.ndarray
+    taus_per_module: np.ndarray
+    metadata: Dict[str, Any] = field(default_factory=dict)
+
+
+def systemic_tau(X: np.ndarray, window_size: int = 13, stride: int = 1, method: str = 'kendall', n_jobs: int = -1) -> SystemicTauResult:
+    """
+    Unified entry point for computing Systemic Tau.
+    
+    Parameters:
+    -----------
+    X : numpy.ndarray
+        Multivariate time series of shape (T, N).
+    window_size : int, optional
+        Size of the sliding window (default 13).
+    stride : int, optional
+        Step size between windows (default 1, other values not yet optimized).
+    method : str, optional
+        Correlation method to use (default 'kendall'). Currently only 'kendall' is implemented.
+    n_jobs : int, optional
+        Number of jobs for parallel execution (not yet implemented).
+        
+    Returns:
+    --------
+    SystemicTauResult
+        A dataclass containing the global taus, per-module taus, and metadata.
+    """
+    start_time = time.time()
+    
+    if method != 'kendall':
+        raise NotImplementedError(f"Method '{method}' is not implemented yet. Only 'kendall' is supported.")
+        
+    taus_global, taus_per_module = compute_taus(X, window_size=window_size)
+    
+    computation_time = time.time() - start_time
+    metadata = {
+        'window_size': window_size,
+        'stride': stride,
+        'method': method,
+        'n_components': X.shape[1],
+        'time_steps': X.shape[0],
+        'computation_time_seconds': computation_time
+    }
+    
+    return SystemicTauResult(
+        taus_global=taus_global,
+        taus_per_module=taus_per_module,
+        metadata=metadata
+    )
