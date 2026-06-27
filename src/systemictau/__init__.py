@@ -14,6 +14,7 @@ from .layers import (
 from .fractal import estimate_higuchi_dimension
 from .generators import ChaosGenerator
 from .visualization import plot_tau_evolution, plot_joint_episodes, plot_ontological_layers
+from .data import preprocess, from_dataframe, from_xarray
 
 __all__ = [
     "systemic_tau",
@@ -34,5 +35,8 @@ __all__ = [
     "ChaosGenerator",
     "plot_tau_evolution",
     "plot_joint_episodes",
-    "plot_ontological_layers"
+    "plot_ontological_layers",
+    "preprocess",
+    "from_dataframe",
+    "from_xarray"
 ]

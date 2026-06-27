@@ -28,7 +28,10 @@ dependencies = [
 [project.optional-dependencies]
 dev = ["pytest>=7.0.0"]
 visualization = ["matplotlib>=3.7", "seaborn"]
-full = ["matplotlib>=3.7", "seaborn", "pandas", "streamlit"]
+full = ["matplotlib>=3.7", "seaborn", "pandas", "xarray", "streamlit", "typer"]
+
+[project.scripts]
+systemictau = "systemictau.cli:app"
 
 [tool.setuptools.packages.find]
 where = ["src"]
