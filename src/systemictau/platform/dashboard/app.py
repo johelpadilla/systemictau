@@ -235,13 +235,17 @@ with tab5:
                 st.warning("Please login first")
             else:
                 headers = {"Authorization": f"Bearer {st.session_state['token']}"}
-                response = requests.get(f"{API_URL}/graph/tenant/{tenant_id}/history", headers=headers)
+                response = requests.get(f"{API_URL}/graph/tenant/{tenant_id}/epistemic", headers=headers)
                 if response.status_code == 200:
                     data = response.json()
-                    st.success("Graph Context Retrieved")
+                    st.success("Epistemic Graph Context Retrieved")
                     for item in data.get("history", []):
                         with st.expander(f"Transition at t* = {item.get('t_star')} (Tau={item.get('tau')})"):
-                            st.markdown(f"**Description:** {item.get('description')}")
+                            st.markdown(f"**Event:** {item.get('description')}")
+                            if item.get("claim"):
+                                st.markdown(f"**Hypothesis:** {item.get('claim')} (Conf: {item.get('confidence')})")
+                                if item.get("source"):
+                                    st.markdown(f"**Evidence:** {item.get('summary')} (Source: {item.get('source')})")
                 else:
                     st.error(f"API Error: {response.text}")
         except Exception as e:

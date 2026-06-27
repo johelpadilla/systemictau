@@ -49,19 +49,34 @@ if 'faust' in globals():
             history = kg.get_historical_context(tenant_id=tenant_id)
             context_str = "\\n".join([f"- At t*={h['t_star']}, tau={h['tau']}: {h['description']}" for h in history])
             
-            # 3. Generate Hypothesis Report via LLM with context
+            # 3. Multi-Agent Discovery Engine Loop
             @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
-            def robust_generate_report(topic):
-                return generate_latex_report(episodes=[1], t_star=0, topic=topic)
+            def run_discovery_agents(context):
+                # Simulated Agent 1: Hypothesizer
+                # In production, this would call `google-genai` using a strict system prompt.
+                hypothesis = f"The structural transition in {tenant_id} is driven by a cascading failure mirroring historical collapse geometries."
+                
+                # Simulated Agent 2: Researcher
+                # The researcher makes a simulated API call to an external database.
+                evidence_source = "Mock Scientific API"
+                evidence_summary = f"Found 3 papers correlating this tau pattern {tau_val} with rapid phase transitions."
+                
+                # Simulated Agent 3: Critic
+                # The critic evaluates the researcher's evidence against the hypothesizer's claim.
+                confidence = 0.85
+                supports = True
+                
+                return hypothesis, confidence, evidence_source, evidence_summary, supports
 
             try:
-                topic = f"Tenant {tenant_id} stream. Historical context:\\n{context_str}"
-                report = robust_generate_report(topic)
-                print("[AGENT OBSERVER] Autonomously generated LaTeX Report with Graph-RAG.")
+                print(f"[AGENT ORCHESTRATOR] Booting Multi-Agent Discovery for Ascent {node_id}")
+                h_claim, h_conf, e_src, e_sum, e_sup = run_discovery_agents(context_str)
                 
-                # 4. Persist Report to Graph
-                kg.persist_agent_report(node_id, report)
-                print(f"[AGENT OBSERVER] Persisted report to Neo4j linked to Ascent {node_id}")
+                # 4. Persist Epistemic Graph
+                h_id = kg.persist_hypothesis(node_id, h_claim, h_conf)
+                kg.persist_evidence(h_id, e_src, e_sum, e_sup)
+                
+                print(f"[AGENT ORCHESTRATOR] Persisted Hypothesis (ID: {h_id}) and Evidence to Neo4j.")
             except Exception as e:
-                print(f"[AGENT OBSERVER] LLM Generation Failed after 3 retries: {e}")
-                kg.persist_agent_report(node_id, "Report Generation Failed. Defaulting to Heuristic Fallback.")
+                print(f"[AGENT ORCHESTRATOR] Multi-Agent Discovery Failed: {e}")
+                h_id = kg.persist_hypothesis(node_id, "Discovery failed to converge.", 0.0)

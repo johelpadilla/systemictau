@@ -134,6 +134,16 @@ def get_graph_history(tenant_id: str, limit: int = 10, user: dict = Depends(veri
     kg.close()
     return {"tenant_id": tenant_id, "history": history}
 
+@app.get("/graph/tenant/{tenant_id}/epistemic")
+def get_epistemic_history(tenant_id: str, limit: int = 10, user: dict = Depends(verify_token)):
+    """
+    Exposes the Neo4j Epistemic Graph history (Hypotheses and Evidence) to the Dashboard.
+    """
+    kg = KnowledgeGraphService()
+    history = kg.get_epistemic_history(tenant_id, limit)
+    kg.close()
+    return {"tenant_id": tenant_id, "history": history}
+
 @app.post("/compute/tau/csv")
 async def compute_tau_csv(file: UploadFile = File(...), window_size: int = 13):
     """
