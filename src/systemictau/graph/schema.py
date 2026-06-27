@@ -33,3 +33,9 @@ class TheoryNode(BaseModel):
     unified_claim: str = Field(..., description="The synthesized theory across multiple corroborated hypotheses")
     confidence: float = Field(..., description="Aggregated confidence score")
     timestamp: Optional[int] = Field(None, description="Unix timestamp of theory synthesis")
+
+class UniversalTheoryNode(BaseModel):
+    macro_claim: str = Field(..., description="A cross-domain unified field theory spanning multiple isolated complex systems")
+    isomorphisms_found: int = Field(default=0, description="Number of distinct domains sharing the exact mathematical phase transition")
+    confidence: float = Field(..., description="Adversarial consensus score across multiple agent societies")
+    timestamp: Optional[int] = Field(None, description="Unix timestamp of macro-theory synthesis")

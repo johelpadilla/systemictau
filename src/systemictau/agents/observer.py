@@ -72,12 +72,20 @@ if 'faust' in globals():
                 evidence_summary, supports = experimentalist_tool.run(hypothesis_query)
                 evidence_source = experimentalist_tool.name
                 
-                # Agent 3: The Epistemologist (Critic)
-                epistemologist_prompt = f"Hypothesis: {hypothesis}\\nEvidence: {evidence_summary}\\nDoes this evidence support the hypothesis? Reply with a float score between 0.0 and 1.0."
+                # Agent 3: The Adversarial Society (Advocate vs Critic -> Judge)
+                # In v7.0, we simulate a peer-review debate.
+                advocate_prompt = f"Hypothesis: {hypothesis}\\nEvidence: {evidence_summary}\\nArgue why this evidence definitively PROVES the hypothesis."
+                critic_prompt = f"Hypothesis: {hypothesis}\\nEvidence: {evidence_summary}\\nArgue why this evidence is INSUFFICIENT or FLAWED."
+                
                 try:
-                    response_epi = client.models.generate_content(model=model_id, contents=epistemologist_prompt)
+                    adv_response = client.models.generate_content(model=model_id, contents=advocate_prompt)
+                    crit_response = client.models.generate_content(model=model_id, contents=critic_prompt)
+                    
+                    judge_prompt = f"Advocate argues: {adv_response.text.strip()}\\nCritic argues: {crit_response.text.strip()}\\nBased on this debate, what is the final objective confidence score for the hypothesis? Reply ONLY with a float between 0.0 and 1.0."
+                    judge_response = client.models.generate_content(model=model_id, contents=judge_prompt)
+                    
                     try:
-                        confidence = float(response_epi.text.strip())
+                        confidence = float(judge_response.text.strip())
                     except ValueError:
                         confidence = 0.5
                 except Exception:

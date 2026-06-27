@@ -154,3 +154,34 @@ class KnowledgeGraphService:
         """
         with self.driver.session() as session:
             session.run(query, h1_id=h1_id, h2_id=h2_id)
+
+    def persist_universal_theory(self, macro_claim: str, isomorphisms: int, confidence: float):
+        if not self.driver:
+            return None
+        query = """
+        CREATE (ut:UniversalTheoryNode {
+            macro_claim: $macro_claim,
+            isomorphisms_found: $isomorphisms,
+            confidence: $confidence,
+            timestamp: timestamp()
+        })
+        RETURN id(ut) as node_id
+        """
+        with self.driver.session() as session:
+            result = session.run(query, macro_claim=macro_claim, isomorphisms=isomorphisms, confidence=confidence)
+            record = result.single()
+            return record["node_id"] if record else None
+            
+    def get_epistemic_voids(self):
+        """Find hypotheses that have low confidence or lack corroborating evidence (v7.0 Proactive Loop)."""
+        if not self.driver:
+            return []
+        query = """
+        MATCH (h:HypothesisNode)
+        WHERE h.confidence < 0.7 OR NOT (h)-[:APPLIES_TO]->(:EvidenceNode)
+        RETURN id(h) as h_id, h.claim as claim, h.confidence as confidence
+        LIMIT 10
+        """
+        with self.driver.session() as session:
+            result = session.run(query)
+            return [{"id": r["h_id"], "claim": r["claim"], "confidence": r["confidence"]} for r in result]
