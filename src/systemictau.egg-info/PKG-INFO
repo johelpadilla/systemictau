@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: systemictau
-Version: 3.0.0.dev0
+Version: 3.0.0
 Summary: Systemic Tau and Discrete Extramental Clock (RECD) implementation
 Author-email: Johel Padilla-Villanueva <joel.padilla2@upr.edu>
 Classifier: Programming Language :: Python :: 3
@@ -17,6 +17,7 @@ Requires-Dist: numpy
 Requires-Dist: scipy
 Provides-Extra: dev
 Requires-Dist: pytest>=7.0.0; extra == "dev"
+Requires-Dist: pytest-cov>=4.0.0; extra == "dev"
 Provides-Extra: visualization
 Requires-Dist: matplotlib>=3.7; extra == "visualization"
 Requires-Dist: seaborn; extra == "visualization"
@@ -29,8 +30,11 @@ Requires-Dist: pandas; extra == "platform"
 Requires-Dist: xarray; extra == "platform"
 Provides-Extra: gis
 Requires-Dist: geopandas; extra == "gis"
+Requires-Dist: libpysal; extra == "gis"
 Provides-Extra: validation
 Requires-Dist: scikit-learn; extra == "validation"
+Provides-Extra: performance
+Requires-Dist: numba; extra == "performance"
 Provides-Extra: full
 Requires-Dist: matplotlib>=3.7; extra == "full"
 Requires-Dist: seaborn; extra == "full"
@@ -42,7 +46,9 @@ Requires-Dist: fastapi; extra == "full"
 Requires-Dist: uvicorn; extra == "full"
 Requires-Dist: python-multipart; extra == "full"
 Requires-Dist: geopandas; extra == "full"
+Requires-Dist: libpysal; extra == "full"
 Requires-Dist: scikit-learn; extra == "full"
+Requires-Dist: numba; extra == "full"
 Dynamic: license-file
 
 # Systemic Tau & Discrete Extramental Clock (RECD)

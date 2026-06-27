@@ -1,4 +1,5 @@
 import pytest
+import numpy as np
 from fastapi.testclient import TestClient
 
 try:
@@ -35,5 +36,27 @@ def test_compute_tau_endpoint():
     # First 2 should be None because window is 3
     assert data["taus_global"][0] is None
     assert data["taus_global"][1] is None
-    # Check metadata
     assert data["metadata"]["window_size"] == 3
+
+@pytest.mark.skipif(not has_fastapi, reason="FastAPI not installed")
+def test_layers_endpoints():
+    payload = {
+        "taus_global": [np.nan, 0.5, 0.6, 0.7, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
+        "taus_per_module": [[np.nan, np.nan], [0.5, 0.5], [0.6, 0.6], [0.7, 0.7], 
+                            [0.1, 0.1], [0.1, 0.1], [0.1, 0.1], [0.1, 0.1], 
+                            [0.1, 0.1], [0.1, 0.1], [0.1, 0.1], [0.1, 0.1]],
+        "theta_A": 0.04,
+        "theta_M": 0.0,
+        "D_min": 2
+    }
+    
+    res1 = client.post("/layers/joint_episodes", json=payload)
+    assert res1.status_code == 200
+    assert "episodes" in res1.json()
+    
+    res2 = client.post("/detect/ascent", json=payload)
+    assert res2.status_code == 200
+    data2 = res2.json()
+    assert "t_frob" in data2
+    assert "t_ks" in data2
+    assert "t_star" in data2

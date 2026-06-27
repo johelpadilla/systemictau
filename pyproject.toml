@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "systemictau"
-version = "3.0.0-dev"
+version = "3.0.0"
 description = "Systemic Tau and Discrete Extramental Clock (RECD) implementation"
 authors = [
     {name = "Johel Padilla-Villanueva", email = "joel.padilla2@upr.edu"}
@@ -26,12 +26,14 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=7.0.0"]
+dev = ["pytest>=7.0.0", "pytest-cov>=4.0.0"]
 visualization = ["matplotlib>=3.7", "seaborn"]
-platform = ["fastapi", "uvicorn", "streamlit", "python-multipart", "pandas", "xarray"]
-gis = ["geopandas"]
+platform = ["fastapi", "uvicorn", "streamlit", "python-multipart", "pandas", "xarray", "folium", "streamlit-folium", "celery", "redis", "websockets", "pyjwt"]
+gis = ["geopandas", "libpysal"]
 validation = ["scikit-learn"]
-full = ["matplotlib>=3.7", "seaborn", "pandas", "xarray", "streamlit", "typer", "fastapi", "uvicorn", "python-multipart", "geopandas", "scikit-learn"]
+performance = ["numba", "dask", "jax", "jaxlib"]
+ai = ["google-genai", "pydantic"]
+full = ["matplotlib>=3.7", "seaborn", "pandas", "xarray", "streamlit", "typer", "fastapi", "uvicorn", "python-multipart", "geopandas", "libpysal", "scikit-learn", "numba", "dask", "folium", "streamlit-folium", "google-genai", "celery", "redis", "websockets", "pyjwt", "jax", "jaxlib"]
 
 [project.scripts]
 systemictau = "systemictau.cli:app"

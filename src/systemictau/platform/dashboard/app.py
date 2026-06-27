@@ -3,14 +3,27 @@ import pandas as pd
 import numpy as np
 
 from systemictau import systemic_tau, from_dataframe, ChaosGenerator
-from systemictau.visualization import plot_tau_evolution
+from systemictau.visualization import plot_tau_evolution, plot_joint_episodes, plot_ontological_layers
+from systemictau.layers import (
+    hyper_persistence, rolling_rqa, critical_mass_metric, 
+    compute_antisynchronization, extract_joint_episodes,
+    detect_reorganization_frob, detect_reorganization_ks, consensus_transition
+)
+from systemictau.recd import compute_recd_increments, accumulate_time
+
+try:
+    import folium
+    from streamlit_folium import st_folium
+    HAS_FOLIUM = True
+except ImportError:
+    HAS_FOLIUM = False
 
 st.set_page_config(page_title="Systemic Tau Platform", page_icon="📈", layout="wide")
 
-st.title("Systemic Tau Dashboard v3.0")
-st.markdown("Analyze multivariate complex systems and detect *Ontological Ascent*.")
+st.title("Systemic Tau Dashboard v3.0 (Stable)")
+st.markdown("Analyze multivariate complex systems, detect *Ontological Ascent*, and Spatial Hotspots.")
 
-tab1, tab2, tab3 = st.tabs(["Data Upload & Chaos", "Systemic Tau Computation", "Layer Analysis"])
+tab1, tab2, tab3, tab4 = st.tabs(["Data Input", "Systemic Tau Computation", "Layer Analysis", "Spatial Analysis"])
 
 with tab1:
     st.header("Data Input")
@@ -18,9 +31,13 @@ with tab1:
     
     df = None
     if input_mode == "Synthetic (Chaos Generator)":
-        n_steps = st.slider("Time steps (T)", 100, 2000, 500)
-        n_comp = st.slider("Number of components (N)", 2, 20, 5)
-        coupling = st.slider("Coupling Strength", 0.0, 0.5, 0.1)
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            n_steps = st.slider("Time steps (T)", 100, 2000, 500)
+        with col2:
+            n_comp = st.slider("Number of components (N)", 2, 20, 5)
+        with col3:
+            coupling = st.slider("Coupling Strength", 0.0, 0.5, 0.1)
         
         if st.button("Generate Data"):
             X = ChaosGenerator.logistic_map_coupled(n_steps, n_comp, coupling=coupling)
@@ -31,9 +48,12 @@ with tab1:
     else:
         uploaded_file = st.file_uploader("Upload CSV", type="csv")
         if uploaded_file:
-            df = pd.read_csv(uploaded_file)
-            st.session_state['df'] = df
-            st.success("File uploaded!")
+            try:
+                df = pd.read_csv(uploaded_file)
+                st.session_state['df'] = df
+                st.success("File uploaded!")
+            except Exception as e:
+                st.error(f"Error loading CSV: {e}")
             
     if 'df' in st.session_state:
         st.write("Preview:")
@@ -44,23 +64,135 @@ with tab2:
     
     if 'df' in st.session_state:
         window_size = st.slider("Sliding Window Size", 3, 100, 13)
+        stride = st.slider("Stride", 1, 10, 1)
         
         if st.button("Compute Systemic Tau"):
             with st.spinner("Computing..."):
-                res = from_dataframe(st.session_state['df'], window_size=window_size)
-                st.session_state['res'] = res
-                
-            st.success(f"Computed in {res.metadata['computation_time_seconds']:.2f} seconds.")
-            
+                try:
+                    res = from_dataframe(st.session_state['df'], window_size=window_size, stride=stride)
+                    st.session_state['res'] = res
+                    st.success(f"Computed in {res.metadata['computation_time_seconds']:.2f} seconds.")
+                except Exception as e:
+                    st.error(f"Computation failed: {e}")
+                    
+        if 'res' in st.session_state:
             st.subheader("Evolution Plot")
-            fig = plot_tau_evolution(res.taus_global).figure
+            fig = plot_tau_evolution(st.session_state['res'].taus_global).figure
             st.pyplot(fig)
     else:
         st.info("Please load data in the first tab.")
 
 with tab3:
     st.header("Ontological Layers & Joint Episodes")
-    st.markdown("*Coming soon in future v3.0 updates.*")
     
     if 'res' in st.session_state:
-        st.metric(label="Global Mean $\\tau_s$", value=f"{np.nanmean(st.session_state['res'].taus_global):.3f}")
+        res = st.session_state['res']
+        taus = res.taus_global
+        
+        st.sidebar.header("Layer Parameters")
+        theta_A = st.sidebar.slider("Theta A (Antisync)", 0.0, 0.5, 0.04)
+        theta_M = st.sidebar.slider("Theta M (Critical Mass)", 0.0, 5.0, 1.0)
+        D_min = st.sidebar.slider("Minimum Duration (D_min)", 1, 100, 30)
+        
+        if st.button("Extract Layers & Detect Ascent"):
+            with st.spinner("Extracting Layers..."):
+                try:
+                    # Layer computations
+                    hp_z, core_hyper = hyper_persistence(taus)
+                    lam, tt = rolling_rqa(taus)
+                    M = critical_mass_metric(hp_z, lam, tt)
+                    A = compute_antisynchronization(res.taus_per_module)
+                    
+                    episodes = extract_joint_episodes(A, M, theta_A=theta_A, D_min=D_min, theta_M=theta_M)
+                    
+                    # Ascent Detection
+                    t_frob, _ = detect_reorganization_frob(res.taus_per_module)
+                    dtk = compute_recd_increments(taus)
+                    t_ks, _ = detect_reorganization_ks(dtk)
+                    t_star = consensus_transition(t_frob, t_ks)
+                    
+                    st.session_state['episodes'] = episodes
+                    st.session_state['t_star'] = t_star
+                    st.session_state['M'] = M
+                    st.session_state['dtk'] = dtk
+                    
+                    st.success(f"Found {len(episodes)} Joint Episodes. Consensus t* = {t_star}")
+                except Exception as e:
+                    st.error(f"Layer extraction failed: {e}")
+                    
+        if 'episodes' in st.session_state:
+            st.subheader("Joint Episodes Table")
+            df_ep = pd.DataFrame(st.session_state['episodes'])
+            if not df_ep.empty:
+                st.dataframe(df_ep)
+            else:
+                st.info("No joint episodes detected with current parameters.")
+                
+            st.subheader("RECD Time Evolution")
+            T_series = accumulate_time(st.session_state['dtk'])
+            st.line_chart(T_series, y_label="Discrete Extramental Time (T)")
+            
+            # Export functionality
+            csv_export = df_ep.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                label="Export Episodes CSV",
+                data=csv_export,
+                file_name='joint_episodes.csv',
+                mime='text/csv',
+            )
+    else:
+        st.info("Compute Systemic Tau first.")
+
+with tab4:
+    st.header("Spatial / GIS Analysis")
+    st.markdown("If your dataset contains spatial coordinates, you can map synchrony hotspots.")
+    
+    if 'df' in st.session_state:
+        df_geo = st.session_state['df']
+        has_geo = 'geometry' in df_geo.columns or ('lat' in df_geo.columns and 'lon' in df_geo.columns)
+        
+        if has_geo:
+            st.success("Spatial coordinates detected.")
+            
+            k = st.slider("KNN Neighbors", 1, 10, 4)
+            window = st.slider("Spatial Time Window", 3, 50, 13)
+            
+            if st.button("Compute Spatial Hotspots"):
+                with st.spinner("Computing Spatial Systemic Tau..."):
+                    try:
+                        from systemictau.spatial import spatial_tau
+                        # Select temporal columns dynamically (dummy logic assumes non-geometry numeric cols)
+                        numeric_cols = df_geo.select_dtypes(include=[np.number]).columns.tolist()
+                        
+                        res_gdf = spatial_tau(df_geo, value_cols=numeric_cols, geometry_col='geometry' if 'geometry' in df_geo.columns else 'lat', k_neighbors=k, window_size=window)
+                        st.session_state['res_gdf'] = res_gdf
+                        st.success("Spatial computation complete!")
+                    except Exception as e:
+                        st.error(f"GIS Error: {e}")
+            
+            if 'res_gdf' in st.session_state and HAS_FOLIUM:
+                st.subheader("Hotspot Map")
+                # Simple interactive map using Folium
+                m = folium.Map(location=[0, 0], zoom_start=2)
+                
+                # Check if it's points
+                for idx, row in st.session_state['res_gdf'].iterrows():
+                    color = 'red' if row.get('hotspot_flag', 0) == 1 else 'blue'
+                    # Simplified coordinate extraction depending on if it's Point geometries
+                    try:
+                        lat, lon = row.geometry.y, row.geometry.x
+                        folium.CircleMarker(
+                            location=[lat, lon],
+                            radius=row['spatial_tau'] * 10,
+                            color=color,
+                            fill=True,
+                            popup=f"Tau: {row['spatial_tau']:.2f}"
+                        ).add_to(m)
+                    except:
+                        pass
+                st_folium(m, width=700, height=500)
+                
+        else:
+            st.warning("No spatial coordinates ('geometry' or 'lat'/'lon') found in the dataset.")
+    else:
+        st.info("Please load data in the first tab.")

@@ -4,10 +4,10 @@ authors:
   - family-names: "Padilla-Villanueva"
     given-names: "Johel"
     orcid: "https://orcid.org/0000-0002-5797-6931"
-title: "Síntesis Magna del Tau Sistémico"
-version: "v6"
+title: "Systemic Tau v3.0 (Stable)"
+version: "3.0.0"
 doi: "10.5281/zenodo.20576241"
-date-released: 2026-06-01
+date-released: 2026-06-26
 url: "https://doi.org/10.5281/zenodo.20576241"
 preferred-citation:
   type: report

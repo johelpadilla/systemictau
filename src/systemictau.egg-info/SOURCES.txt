@@ -24,6 +24,8 @@ src/systemictau/platform/api/main.py
 src/systemictau/platform/dashboard/__init__.py
 src/systemictau/platform/dashboard/app.py
 tests/test_core.py
+tests/test_gis.py
 tests/test_v21.py
 tests/test_v25.py
 tests/test_v30.py
+tests/test_validation.py

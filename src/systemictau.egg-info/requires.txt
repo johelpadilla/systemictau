@@ -3,6 +3,7 @@ scipy
 
 [dev]
 pytest>=7.0.0
+pytest-cov>=4.0.0
 
 [full]
 matplotlib>=3.7
@@ -15,10 +16,16 @@ fastapi
 uvicorn
 python-multipart
 geopandas
+libpysal
 scikit-learn
+numba
 
 [gis]
 geopandas
+libpysal
+
+[performance]
+numba
 
 [platform]
 fastapi

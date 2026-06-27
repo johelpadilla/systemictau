@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: systemictau-worker
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: systemictau-worker
+  template:
+    metadata:
+      labels:
+        app: systemictau-worker
+    spec:
+      containers:
+      - name: worker
+        image: systemictau:v4.0
+        command: ["celery", "-A", "systemictau.platform.api.worker.celery_app", "worker", "--loglevel=info"]
+        env:
+        - name: CELERY_BROKER_URL
+          value: "redis://systemictau-redis:6379/0"
