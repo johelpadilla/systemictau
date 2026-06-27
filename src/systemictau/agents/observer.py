@@ -51,7 +51,10 @@ if 'faust' in globals():
             try:
                 topic = f"Tenant {tenant_id} stream. Historical context:\\n{context_str}"
                 report = generate_latex_report(episodes=[1], t_star=0, topic=topic)
-                print("[AGENT OBSERVER] Autonomously generated LaTeX Report with Graph-RAG:")
-                print(report)
+                print("[AGENT OBSERVER] Autonomously generated LaTeX Report with Graph-RAG.")
+                
+                # 4. Persist Report to Graph
+                kg.persist_agent_report(node_id, report)
+                print(f"[AGENT OBSERVER] Persisted report to Neo4j linked to Ascent {node_id}")
             except Exception as e:
                 print(f"[AGENT OBSERVER] LLM Generation Failed: {e}")

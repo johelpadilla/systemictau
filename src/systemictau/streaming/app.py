@@ -7,6 +7,8 @@ import os
 import json
 import numpy as np
 from systemictau import systemic_tau
+from systemictau.streaming.models import StreamPayload
+from pydantic import ValidationError
 
 # Ensure this runs gracefully if faust is missing (e.g. standard install)
 if 'faust' in globals():
@@ -30,8 +32,15 @@ if 'faust' in globals():
     @app.agent(raw_data_topic)
     async def process_stream(stream):
         async for payload in stream:
-            tenant_id = payload.get("tenant_id", "default")
-            new_data_point = payload.get("vector")  # e.g., [1.2, 3.4, ...]
+            try:
+                # 1. Strict Payload Validation
+                validated_data = StreamPayload(**payload)
+            except ValidationError as e:
+                print(f"[FAUST] Dropping malformed payload: {e}")
+                continue
+                
+            tenant_id = validated_data.tenant_id
+            new_data_point = validated_data.vector
             
             # Append to rolling window (simplified logic)
             window = window_state[tenant_id]

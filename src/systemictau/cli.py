@@ -104,5 +104,54 @@ def ui():
     typer.secho("Starting Systemic Tau UI...", fg=typer.colors.GREEN)
     subprocess.run([sys.executable, "-m", "streamlit", "run", str(app_path)])
 
+plugin_app = typer.Typer(help="Manage Systemic Tau plugins.")
+app.add_typer(plugin_app, name="plugin")
+
+@plugin_app.command("create")
+def create_plugin(name: str):
+    """
+    Scaffolds a new Systemic Tau plugin with pluggy entrypoints.
+    """
+    import os
+    plugin_dir = f"systemictau-plugin-{name}"
+    os.makedirs(plugin_dir, exist_ok=True)
+    
+    # setup.py
+    with open(f"{plugin_dir}/setup.py", "w") as f:
+        f.write(f'''from setuptools import setup, find_packages
+
+setup(
+    name="systemictau-plugin-{name}",
+    version="0.1.0",
+    packages=find_packages(),
+    entry_points={{
+        "systemictau": [
+            "{name} = {name}.hooks",
+        ],
+    }},
+)
+''')
+
+    # Python module
+    os.makedirs(f"{plugin_dir}/{name}", exist_ok=True)
+    with open(f"{plugin_dir}/{name}/__init__.py", "w") as f:
+        pass
+        
+    with open(f"{plugin_dir}/{name}/hooks.py", "w") as f:
+        f.write('''import systemictau
+import numpy as np
+
+@systemictau.hookimpl
+def compute_custom_correlation(X: np.ndarray) -> np.ndarray:
+    """
+    Replace Kendall Tau with a proprietary metric.
+    """
+    return np.corrcoef(X, rowvar=False)
+''')
+
+    typer.echo(f"Successfully created plugin scaffold at ./{plugin_dir}")
+    typer.echo("To install it, run:")
+    typer.echo(f"  cd {plugin_dir} && pip install -e .")
+
 if __name__ == "__main__":
     app()

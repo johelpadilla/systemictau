@@ -18,12 +18,15 @@ try:
 except ImportError:
     HAS_FOLIUM = False
 
+API_URL = os.getenv("API_URL", "http://localhost:8000")
+DUMMY_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.dummy.signature"
+
 st.set_page_config(page_title="Systemic Tau Platform", page_icon="📈", layout="wide")
 
-st.title("Systemic Tau Dashboard v3.0 (Stable)")
-st.markdown("Analyze multivariate complex systems, detect *Ontological Ascent*, and Spatial Hotspots.")
+st.title("Systemic Tau v5.0 : The Ontological Dynamics Platform")
+st.markdown("Real-time topological data analysis and causal mapping for complex systems.")
 
-tab1, tab2, tab3, tab4 = st.tabs(["Data Input", "Systemic Tau Computation", "Layer Analysis", "Spatial Analysis"])
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["Data Input", "Systemic Tau Computation", "Layer Analysis", "Spatial Analysis", "Neo4j Knowledge Graph"])
 
 with tab1:
     st.header("Data Input")
@@ -196,3 +199,24 @@ with tab4:
             st.warning("No spatial coordinates ('geometry' or 'lat'/'lon') found in the dataset.")
     else:
         st.info("Please load data in the first tab.")
+
+import requests
+with tab5:
+    st.header("Autonomous AI & Knowledge Graph")
+    st.markdown("Query the Neo4j graph for historical ontological ascents and LLM reports.")
+    
+    tenant_id = st.text_input("Tenant ID", value="default")
+    if st.button("Fetch Graph History"):
+        try:
+            headers = {"Authorization": f"Bearer {DUMMY_TOKEN}"}
+            response = requests.get(f"{API_URL}/graph/tenant/{tenant_id}/history", headers=headers)
+            if response.status_code == 200:
+                data = response.json()
+                st.success("Graph Context Retrieved")
+                for item in data.get("history", []):
+                    with st.expander(f"Transition at t* = {item.get('t_star')} (Tau={item.get('tau')})"):
+                        st.markdown(f"**Description:** {item.get('description')}")
+            else:
+                st.error(f"API Error: {response.text}")
+        except Exception as e:
+            st.error(f"Connection failed: {e}")

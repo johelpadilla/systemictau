@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, UploadFile, File, BackgroundTasks, WebSocket, Depends, status
+from fastapi import FastAPI, HTTPException, UploadFile, File, BackgroundTasks, WebSocket, Depends, status, WebSocketDisconnect
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import jwt
 from pydantic import BaseModel
@@ -17,6 +17,7 @@ from systemictau.layers import (
     detect_reorganization_frob, detect_reorganization_ks, consensus_transition
 )
 from systemictau.recd import compute_recd_increments
+from systemictau.graph.db import KnowledgeGraphService
 
 app = FastAPI(title="Systemic Tau Enterprise API v4.0", version="4.0.0")
 
@@ -93,8 +94,18 @@ async def stream_tau_updates(websocket: WebSocket):
             data = await websocket.receive_text()
             # In a real scenario, process incoming stream chunks
             await websocket.send_text(f"Processed stream chunk. Current Tau: {np.random.rand()}")
-    except Exception as e:
-        print(f"WebSocket closed: {e}")
+    except WebSocketDisconnect:
+        print("WebSocket closed")
+
+@app.get("/graph/tenant/{tenant_id}/history")
+def get_graph_history(tenant_id: str, limit: int = 10, user: dict = Depends(verify_token)):
+    """
+    Exposes the Neo4j Knowledge Graph history to the Dashboard.
+    """
+    kg = KnowledgeGraphService()
+    history = kg.get_historical_context(tenant_id, limit)
+    kg.close()
+    return {"tenant_id": tenant_id, "history": history}
 
 @app.post("/compute/tau/csv")
 async def compute_tau_csv(file: UploadFile = File(...), window_size: int = 13):

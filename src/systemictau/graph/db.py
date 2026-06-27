@@ -60,3 +60,21 @@ class KnowledgeGraphService:
         with self.driver.session() as session:
             result = session.run(query, tenant_id=tenant_id, limit=limit)
             return [record.data() for record in result]
+            
+    def persist_agent_report(self, ascent_node_id: int, report_text: str):
+        """
+        Attaches an LLM generated ReportNode to an AscentNode in the Graph.
+        """
+        if not self.driver:
+            return
+            
+        query = """
+        MATCH (a:OntologicalAscent) WHERE id(a) = $node_id
+        CREATE (r:ReportNode {
+            content: $content,
+            timestamp: timestamp()
+        })
+        CREATE (a)-[:SYNTHESIZED_INTO]->(r)
+        """
+        with self.driver.session() as session:
+            session.run(query, node_id=ascent_node_id, content=report_text)

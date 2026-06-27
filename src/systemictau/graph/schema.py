@@ -10,3 +10,7 @@ class AscentNode(BaseModel):
     tau: float = Field(..., description="The tau correlation value at the transition")
     description: str = Field(..., description="Details about the ontological transition")
     timestamp: Optional[int] = Field(None, description="Unix timestamp of the transition")
+
+class ReportNode(BaseModel):
+    content: str = Field(..., description="The generated LaTeX report from the LLM.")
+    timestamp: Optional[int] = Field(None, description="Unix timestamp of generation")
