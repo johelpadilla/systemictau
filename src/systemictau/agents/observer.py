@@ -9,6 +9,8 @@ from systemictau.platform.ai import generate_latex_report
 from systemictau.graph.db import KnowledgeGraphService
 from systemictau.config import settings
 from systemictau.agents.tools import PubMedSearchTool, WebSearchTool
+from google import genai
+from google.genai import types
 
 if 'faust' in globals():
     kafka_broker = settings.kafka_broker
@@ -53,23 +55,33 @@ if 'faust' in globals():
             # 3. Multi-Agent Discovery Engine Loop (Ontologist -> Experimentalist -> Epistemologist)
             @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
             def run_discovery_agents(context):
+                client = genai.Client(api_key=settings.google_api_key)
+                model_id = 'gemini-2.5-flash'
+                
                 # Agent 1: The Ontologist (Hypothesizer)
-                # Evaluates historical context and math to generate a claim.
-                hypothesis_query = f"structural transition driven by collapse geometry"
-                hypothesis = f"The structural transition in {tenant_id} is driven by a cascading failure mirroring historical collapse geometries."
+                ontologist_prompt = f"Given this system transition context:\\n{context}\\nFormulate a strict 1-sentence causal hypothesis for the anomaly (Tau={tau_val})."
+                try:
+                    response_ont = client.models.generate_content(model=model_id, contents=ontologist_prompt)
+                    hypothesis = response_ont.text.strip()
+                except Exception as e:
+                    hypothesis = f"Fallback hypothesis due to API error: {e}"
                 
                 # Agent 2: The Experimentalist (Researcher + Tools)
-                # Dynamically selects and uses a Tool API.
                 experimentalist_tool = PubMedSearchTool()
+                hypothesis_query = "structural transition driven by collapse geometry"
                 evidence_summary, supports = experimentalist_tool.run(hypothesis_query)
                 evidence_source = experimentalist_tool.name
                 
                 # Agent 3: The Epistemologist (Critic)
-                # Evaluates the experimentalist's empirical return against the ontologist's claim.
-                if supports:
-                    confidence = 0.92
-                else:
-                    confidence = 0.30
+                epistemologist_prompt = f"Hypothesis: {hypothesis}\\nEvidence: {evidence_summary}\\nDoes this evidence support the hypothesis? Reply with a float score between 0.0 and 1.0."
+                try:
+                    response_epi = client.models.generate_content(model=model_id, contents=epistemologist_prompt)
+                    try:
+                        confidence = float(response_epi.text.strip())
+                    except ValueError:
+                        confidence = 0.5
+                except Exception:
+                    confidence = 0.5
                 
                 return hypothesis, confidence, evidence_source, evidence_summary, supports, experimentalist_tool.version
 

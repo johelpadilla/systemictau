@@ -10,6 +10,9 @@ class Settings(BaseSettings):
     jwt_secret: str = "super_secret_jwt_key_v5"
     gemini_api_key: str = "dummy_key"
     
+    # Agent & Tool configuration
+    google_api_key: str = Field(default="DUMMY_GEMINI_KEY", env="GOOGLE_API_KEY")
+    
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
 settings = Settings()
