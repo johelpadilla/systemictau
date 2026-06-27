@@ -4,6 +4,7 @@ import threading
 import pandas as pd
 from google import genai
 from systemictau.config import settings
+from systemictau.agents.epistemic_engine import run_discovery_engine_sync
 
 # Optional try-except to avoid breaking the core library if customtkinter is not installed
 try:
@@ -137,7 +138,7 @@ class SystemicTauApp(ctk.CTk if ctk else object):
         self._update_results(f"      -> {msg}\\n")
         
         # 2. Multi-Agent Engine (Real LLM Call)
-        self._update_results("\\n[2/3] Multi-Agent Engine generating hypotheses...\\n")
+        self._update_results("\\n[2/3] Booting Hierarchical Multi-Agent Discovery Engine...\\n")
         
         try:
             # Check if key is dummy or empty
@@ -147,29 +148,24 @@ class SystemicTauApp(ctk.CTk if ctk else object):
                 self.after(0, self._prompt_for_api_key)
                 return
 
-            client = genai.Client(api_key=current_key)
-            model_id = 'gemini-2.5-flash'
-            
             context = f"A data file from the domain '{self.domain_menu.get()}' was analyzed. The system detected: {msg}."
-            ontologist_prompt = f"Given this system transition context:\\n{context}\\nFormulate a strict 1-sentence causal scientific hypothesis for this structural anomaly."
             
-            response_ont = client.models.generate_content(model=model_id, contents=ontologist_prompt)
-            hypothesis = response_ont.text.strip()
-            self._update_results(f"      -> Hypothesis: {hypothesis}\\n")
+            # Run the Epistemic Engine synchronously in this thread, streaming output to UI
+            hypothesis, confidence = run_discovery_engine_sync(
+                context=context, 
+                tau_val=tau_val, 
+                update_callback=self._update_results
+            )
+            
+            self._update_results("\\n[3/3] Autonomous analysis complete.\\n")
             
         except Exception as e:
             if "API key not valid" in str(e):
                 self._update_results("      -> API Key is invalid. Requesting new key...\\n")
                 self.after(0, self._prompt_for_api_key)
             else:
-                self._update_results(f"      -> Agent Error: {e}\\n")
+                self._update_results(f"      -> Agent Engine Error: {e}\\n")
             return
-            
-        self._update_results("\\n[3/3] Fetching empirical evidence...\\n")
-        # In a full run, we would call the PubMedSearchTool here. Mocking for speed in desktop.
-        self._update_results("      -> (Simulated) Searched PubMed/arXiv. Found corroborating patterns.\\n")
-        
-        self._update_results("\\nDone. Autonomous analysis complete.\\n")
         
         # Store for "Explain Simply"
         self.last_hypothesis = hypothesis
