@@ -33,9 +33,14 @@ def run_discovery_engine_sync(context: str, tau_val: float, update_callback=None
     log("\\n[Agent 1: Ontologist] Formulating initial hypothesis based on Tau transition...\\n")
     ontologist_prompt = (
         f"Context: {context}\\n"
-        f"Mathematical Transition (Tau): {tau_val}\\n\\n"
-        "As an expert Systems Ontologist, formulate a strict, 1-sentence causal scientific hypothesis "
-        "explaining this structural anomaly. Focus on systemic collapse geometry."
+        f"Mathematical Transition (Tau_s): {tau_val}\\n\\n"
+        "You are the Systemic Tau AI Ontologist. According to the Systemic Tau paradigm, Tau (τ_s) quantifies "
+        "the discrete extramental coherence of a complex system across time. A critical phase transition (t*) "
+        "occurs when this coherence crosses a structural mass threshold, forcing the system to shed complexity "
+        "or undergo topological reorganization to survive.\\n\\n"
+        "Formulate a strict, 1-sentence causal scientific hypothesis explaining why this specific variable "
+        "experienced a topological reorganization (t*). Do not hallucinate generic stories; focus strictly on "
+        "systemic coherence, entropic decay, and structural breakpoints."
     )
     try:
         response_ont = client.models.generate_content(model=model_id, contents=ontologist_prompt)
@@ -50,8 +55,9 @@ def run_discovery_engine_sync(context: str, tau_val: float, update_callback=None
     log("\\n[Agent 2: Experimentalist] Fetching empirical evidence...\\n")
     # Simulating the PubMedSearchTool output for the desktop app so it doesn't hang on network scraping
     evidence_summary = (
-        "Empirical literature search simulated. Patterns of rapid variance growth "
-        "strongly correlate with phase transitions and systemic bifurcation points."
+        "Empirical retrieval [Simulated PubMed/arXiv]: Time-series datasets across multiple "
+        "complex domains confirm that a rapid deviation in systemic coherence (high τ_s) immediately "
+        "precedes macroscopic topological collapse and irreversible phase bifurcations."
     )
     log(f"      -> Evidence: {evidence_summary}\\n")
 
@@ -62,8 +68,9 @@ def run_discovery_engine_sync(context: str, tau_val: float, update_callback=None
     advocate_prompt = (
         f"Hypothesis: {hypothesis}\\n"
         f"Evidence: {evidence_summary}\\n\\n"
-        "As the Advocate, argue aggressively in 2-3 sentences why this evidence "
-        "definitively PROVES the hypothesis is an absolute systemic truth."
+        "You are the Systemic Tau Advocate. Argue aggressively in 2-3 sentences why this empirical evidence "
+        "definitively proves the hypothesis. Use the formal language of topological reorganization, "
+        "systemic coherence, and causal bifurcation points."
     )
     try:
         adv_response = client.models.generate_content(model=model_id, contents=advocate_prompt)
@@ -77,10 +84,11 @@ def run_discovery_engine_sync(context: str, tau_val: float, update_callback=None
     # ---------------------------------------------------------
     log("\\n[Agent 3B: Critic] Attacking the hypothesis...\\n")
     critic_prompt = (
-        f"Hypothesis: {hypothesis}\\n"
+        f"Systemic Tau Hypothesis: {hypothesis}\\n"
         f"Evidence: {evidence_summary}\\n\\n"
-        "As the Critic, argue aggressively in 2-3 sentences why this evidence "
-        "is INSUFFICIENT, FLAWED, or purely circumstantial."
+        "You are the Systemic Tau Critic. Argue aggressively in 2-3 sentences why this evidence "
+        "is mathematically INSUFFICIENT to prove the hypothesis. Attack the lack of rigorous correlation "
+        "between the observed entropic decay and the claimed topological reorganization."
     )
     try:
         crit_response = client.models.generate_content(model=model_id, contents=critic_prompt)
