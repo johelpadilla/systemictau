@@ -223,7 +223,7 @@ class SystemicTauApp(BaseApp):
             return
             
         self.full_log = ""
-        self._update_results("Initializing Systemic Tau Mathematical Analysis...\\n\\n", clear=True)
+        self._update_results("Initializing Systemic Tau Mathematical Analysis...\n\n", clear=True)
         threading.Thread(target=self._run_real_analysis_pipeline, daemon=True).start()
 
     def _run_real_analysis_pipeline(self):
@@ -283,17 +283,17 @@ class SystemicTauApp(BaseApp):
             msg = f"Structural break detected in '{target_col}' (Tau_s={tau_val:.2f}) at index {t_star}."
             
             # --- DETERMINISTIC REPORT (NO AI) ---
-            self._update_results(f"[MATHEMATICS] {msg}\\n")
+            self._update_results(f"[MATHEMATICS] {msg}\n")
             self._generate_deterministic_report()
             
             # --- OPTIONAL AI EPISTEMIC ENGINE ---
             if self.run_ai_switch.get() == 1:
-                self._update_results("\\n[EPISTEMIC ENGINE] Booting Hierarchical Multi-Agent Discovery...\\n")
+                self._update_results("\n[EPISTEMIC ENGINE] Booting Hierarchical Multi-Agent Discovery...\n")
                 
                 # Check API Key
                 current_key = settings.google_api_key
                 if not current_key or current_key == "DUMMY_GEMINI_KEY":
-                    self._update_results("      -> API Key missing. Requesting from user...\\n")
+                    self._update_results("      -> API Key missing. Requesting from user...\n")
                     self.after(0, self._prompt_for_api_key)
                     return
 
@@ -306,17 +306,17 @@ class SystemicTauApp(BaseApp):
                 )
                 self.last_hypothesis = hypothesis
             else:
-                self._update_results("\\n[NOTE] AI Epistemic Engine is disabled. Pure mathematical interpretation complete.\\n")
+                self._update_results("\n[NOTE] AI Epistemic Engine is disabled. Pure mathematical interpretation complete.\n")
                 self.last_hypothesis = "AI Engine was disabled. Review the deterministic mathematical report above."
                 
-            self._update_results("\\n[COMPLETE] Analysis finalized.\\n")
+            self._update_results("\n[COMPLETE] Analysis finalized.\n")
             
         except Exception as e:
             if "API key not valid" in str(e):
-                self._update_results("      -> API Key is invalid. Requesting new key...\\n")
+                self._update_results("      -> API Key is invalid. Requesting new key...\n")
                 self.after(0, self._prompt_for_api_key)
             else:
-                self._update_results(f"\\n[ERROR] Analysis failed: {e}\\n")
+                self._update_results(f"\n[ERROR] Analysis failed: {e}\n")
                 
     def _highlight_graph(self):
         self.ax1.clear(); self.ax2.clear(); self.ax3.clear(); self.ax4.clear()
@@ -362,25 +362,25 @@ class SystemicTauApp(BaseApp):
         target_col = s['target_col']
         
         report = (
-            f"\\n--- STRUCTURAL DIAGNOSIS REPORT ---\\n"
-            f"1. TOPOLOGICAL REORGANIZATION (τ_s):\\n"
-            f"   A critical structural break (t*) was isolated at sequence index [{t_star}].\\n"
-            f"   The absolute magnitude (variance) of the anomaly for '{target_col}' peaked at {s['tau_val']:.2e}.\\n"
-            f"   According to Systemic Tau, this signifies the exact moment the system crossed its structural mass threshold.\\n\\n"
+            f"\n--- STRUCTURAL DIAGNOSIS REPORT ---\n"
+            f"1. TOPOLOGICAL REORGANIZATION (τ_s):\n"
+            f"   A critical structural break (t*) was isolated at sequence index [{t_star}].\n"
+            f"   The absolute magnitude (variance) of the anomaly for '{target_col}' peaked at {s['tau_val']:.2e}.\n"
+            f"   According to Systemic Tau, this signifies the exact moment the system crossed its structural mass threshold.\n\n"
             
-            f"2. ACCELERATION MOMENTUM (a_t):\\n"
-            f"   The second derivative (a_t) reached a critical peak of {s['max_accel']:.2e}.\\n"
-            f"   This indicates extreme systemic momentum precipitating the topological collapse.\\n\\n"
+            f"2. ACCELERATION MOMENTUM (a_t):\n"
+            f"   The second derivative (a_t) reached a critical peak of {s['max_accel']:.2e}.\n"
+            f"   This indicates extreme systemic momentum precipitating the topological collapse.\n\n"
             
-            f"3. ENTROPIC DECAY (S_e):\\n"
-            f"   The rolling volatility (Entropic Decay) maxed out at {s['max_entropy']:.2e}.\\n"
-            f"   This reveals that prior to t*, the internal chaos of '{target_col}' built up uncontrollably,\\n"
-            f"   forcing the system to shed complexity to survive.\\n\\n"
+            f"3. ENTROPIC DECAY (S_e):\n"
+            f"   The rolling volatility (Entropic Decay) maxed out at {s['max_entropy']:.2e}.\n"
+            f"   This reveals that prior to t*, the internal chaos of '{target_col}' built up uncontrollably,\n"
+            f"   forcing the system to shed complexity to survive.\n\n"
             
-            f"4. SYSTEMIC COHERENCE (C_s):\\n"
-            f"   The extramental coherence dropped to {s['min_coherence']:.2f}.\\n"
-            f"   A drop in coherence mathematically proves that internal variables are decoupling.\\n"
-            f"---------------------------------------\\n"
+            f"4. SYSTEMIC COHERENCE (C_s):\n"
+            f"   The extramental coherence dropped to {s['min_coherence']:.2f}.\n"
+            f"   A drop in coherence mathematically proves that internal variables are decoupling.\n"
+            f"---------------------------------------\n"
         )
         self._update_results(report)
 
@@ -390,11 +390,11 @@ class SystemicTauApp(BaseApp):
         if key:
             env_path = os.path.join(os.getcwd(), ".env")
             with open(env_path, "a") as f:
-                f.write(f"\\nGOOGLE_API_KEY={key}\\n")
+                f.write(f"\nGOOGLE_API_KEY={key}\n")
             settings.google_api_key = key
-            self._update_results("      -> API Key saved. Please click 'Analyze' again.\\n")
+            self._update_results("      -> API Key saved. Please click 'Analyze' again.\n")
         else:
-            self._update_results("      -> Analysis aborted: No API key provided.\\n")
+            self._update_results("      -> Analysis aborted: No API key provided.\n")
 
     def _update_results(self, text, clear=False):
         self.results_box.configure(state="normal")
@@ -409,15 +409,15 @@ class SystemicTauApp(BaseApp):
     def explain_simply(self):
         if not hasattr(self, 'last_hypothesis'):
             return
-        self._update_results("\\n--- Generating Simple Explanation (LLM) ---\\n")
+        self._update_results("\n--- Generating Simple Explanation (LLM) ---\n")
         def _explain():
             try:
                 client = genai.Client(api_key=settings.google_api_key)
-                prompt = f"Explain this complex scientific hypothesis to a high schooler in one short paragraph:\\n{self.last_hypothesis}"
+                prompt = f"Explain this complex scientific hypothesis to a high schooler in one short paragraph:\n{self.last_hypothesis}"
                 resp = client.models.generate_content(model='gemini-2.5-flash', contents=prompt)
-                self._update_results(f"\\nSimple Explanation: {resp.text.strip()}\\n")
+                self._update_results(f"\nSimple Explanation: {resp.text.strip()}\n")
             except Exception as e:
-                self._update_results(f"\\nError: {e}\\n")
+                self._update_results(f"\nError: {e}\n")
         threading.Thread(target=_explain, daemon=True).start()
 
     def export_report(self):
@@ -426,7 +426,7 @@ class SystemicTauApp(BaseApp):
         save_path = filedialog.asksaveasfilename(defaultextension=".pdf", filetypes=[("PDF files", "*.pdf")])
         if not save_path:
             return
-        self._update_results(f"\\nGenerating Academic PDF Report at {save_path}...\\n")
+        self._update_results(f"\nGenerating Academic PDF Report at {save_path}...\n")
         
         def _build_pdf():
             try:
@@ -456,9 +456,13 @@ class SystemicTauApp(BaseApp):
                 pdf.image(temp_img, x=10, w=190)
                 pdf.ln(5)
                 
-                # AI Log
+                # AI Log or Deterministic Log
                 pdf.set_font("Arial", 'B', 12)
-                pdf.cell(0, 8, "2. Autonomous Epistemic Peer-Review", ln=True)
+                if self.run_ai_switch.get() == 1:
+                    pdf.cell(0, 8, "2. Autonomous Epistemic Peer-Review", ln=True)
+                else:
+                    pdf.cell(0, 8, "2. Deterministic Structural Diagnosis", ln=True)
+                    
                 pdf.set_font("Courier", size=9)
                 
                 # Sanitize the log text to remove greek and complex characters that crash fpdf
@@ -470,9 +474,9 @@ class SystemicTauApp(BaseApp):
                 if os.path.exists(temp_img):
                     os.remove(temp_img)
                     
-                self.after(0, lambda: self._update_results(f"\\n[SUCCESS] Academic PDF Exported to: {save_path}\\n"))
+                self.after(0, lambda: self._update_results(f"\n[SUCCESS] Academic PDF Exported to: {save_path}\n"))
             except Exception as e:
-                self.after(0, lambda: self._update_results(f"\\n[ERROR] PDF Generation failed: {e}\\n"))
+                self.after(0, lambda: self._update_results(f"\n[ERROR] PDF Generation failed: {e}\n"))
                 
         threading.Thread(target=_build_pdf, daemon=True).start()
 
