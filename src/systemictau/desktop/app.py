@@ -36,7 +36,7 @@ class SystemicTauApp(ctk.CTk if ctk else object):
         self.domain_menu = ctk.CTkOptionMenu(self.sidebar_frame, values=["Epidemiology", "Finance", "Ecology", "General"])
         self.domain_menu.grid(row=3, column=0, padx=20, pady=(10, 20))
         
-        self.advanced_btn = ctk.CTkButton(self.sidebar_frame, text="Advanced Settings", state="disabled")
+        self.advanced_btn = ctk.CTkButton(self.sidebar_frame, text="Advanced Settings", state="disabled", command=self.open_advanced_settings)
         self.advanced_btn.grid(row=4, column=0, padx=20, pady=10, sticky="n")
 
         # create main frame
@@ -98,6 +98,41 @@ class SystemicTauApp(ctk.CTk if ctk else object):
 
     def export_report(self):
         print("Exporting PDF report...")
+        
+    def open_advanced_settings(self):
+        # Open a guided advanced settings window
+        adv_window = ctk.CTkToplevel(self)
+        adv_window.title("Advanced Engine Settings")
+        adv_window.geometry("500x450")
+        adv_window.attributes("-topmost", True)
+        
+        # Guided control sections
+        ctk.CTkLabel(adv_window, text="Autonomous Orchestrator Governance", font=ctk.CTkFont(size=16, weight="bold")).pack(pady=(20, 10))
+        
+        # 1. Agent Configuration
+        agent_frame = ctk.CTkFrame(adv_window)
+        agent_frame.pack(fill="x", padx=20, pady=10)
+        ctk.CTkLabel(agent_frame, text="Agent Roles", font=ctk.CTkFont(weight="bold")).pack(anchor="w", padx=10, pady=5)
+        ctk.CTkSwitch(agent_frame, text="Enable Critic Agent (Adversarial Consensus)").pack(anchor="w", padx=20, pady=5)
+        ctk.CTkSwitch(agent_frame, text="Enable Proactive Epistemic Engine (Background)").pack(anchor="w", padx=20, pady=5)
+        
+        # 2. Thresholds
+        thresh_frame = ctk.CTkFrame(adv_window)
+        thresh_frame.pack(fill="x", padx=20, pady=10)
+        ctk.CTkLabel(thresh_frame, text="Topological Transition Threshold (M*)", font=ctk.CTkFont(weight="bold")).pack(anchor="w", padx=10, pady=5)
+        slider = ctk.CTkSlider(thresh_frame, from_=0.1, to=1.0, number_of_steps=90)
+        slider.set(0.85)
+        slider.pack(fill="x", padx=20, pady=(5, 15))
+        
+        # 3. Tool Governance
+        tool_frame = ctk.CTkFrame(adv_window)
+        tool_frame.pack(fill="x", padx=20, pady=10)
+        ctk.CTkLabel(tool_frame, text="Tool Sandbox Access", font=ctk.CTkFont(weight="bold")).pack(anchor="w", padx=10, pady=5)
+        ctk.CTkCheckBox(tool_frame, text="PubMed / arXiv (Literature)").pack(anchor="w", padx=20, pady=5)
+        ctk.CTkCheckBox(tool_frame, text="Python REPL (Code Execution) - Requires Docker").pack(anchor="w", padx=20, pady=5)
+        
+        # Save Button
+        ctk.CTkButton(adv_window, text="Apply Changes", command=adv_window.destroy).pack(pady=20)
 
 def main():
     if not ctk:

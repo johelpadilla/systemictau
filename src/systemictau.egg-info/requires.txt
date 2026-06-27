@@ -1,6 +1,13 @@
 numpy
 scipy
 
+[ai]
+google-genai
+pydantic
+
+[desktop]
+customtkinter
+
 [dev]
 pytest>=7.0.0
 pytest-cov>=4.0.0
@@ -19,6 +26,25 @@ geopandas
 libpysal
 scikit-learn
 numba
+dask
+folium
+streamlit-folium
+google-genai
+celery
+redis
+websockets
+pyjwt
+jax
+jaxlib
+faust-streaming
+neo4j
+pluggy
+python-rocksdb
+prometheus-client
+pydantic-settings
+tenacity
+aiokafka
+customtkinter
 
 [gis]
 geopandas
@@ -26,6 +52,10 @@ libpysal
 
 [performance]
 numba
+dask
+jax
+jaxlib
+pluggy
 
 [platform]
 fastapi
@@ -34,6 +64,19 @@ streamlit
 python-multipart
 pandas
 xarray
+folium
+streamlit-folium
+celery
+redis
+websockets
+pyjwt
+faust-streaming
+neo4j
+python-rocksdb
+prometheus-client
+pydantic-settings
+tenacity
+aiokafka
 
 [validation]
 scikit-learn
