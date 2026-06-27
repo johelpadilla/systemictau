@@ -19,11 +19,15 @@ from systemictau.layers import (
 from systemictau.recd import compute_recd_increments
 from systemictau.graph.db import KnowledgeGraphService
 
-app = FastAPI(title="Systemic Tau Enterprise API v4.0", version="4.0.0")
+import json
+import asyncio
+from systemictau.config import settings
+
+app = FastAPI(title="Systemic Tau Enterprise API v5.0", version="5.0.0")
 
 # Security
 security = HTTPBearer()
-SECRET_KEY = "systemictau_super_secret"
+SECRET_KEY = settings.jwt_secret
 
 def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
     try:
@@ -50,6 +54,18 @@ class LayersRequest(BaseModel):
 @app.get("/")
 def read_root():
     return {"message": "Welcome to the Systemic Tau API. Visit /docs for the swagger UI."}
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+@app.post("/token")
+def login_for_access_token(request: LoginRequest):
+    # In production, verify user against Neo4j or DB
+    if request.username == "admin" and request.password == "admin":
+        token = jwt.encode({"sub": request.username}, SECRET_KEY, algorithm="HS256")
+        return {"access_token": token, "token_type": "bearer"}
+    raise HTTPException(status_code=401, detail="Incorrect credentials")
 
 @app.post("/compute/tau")
 def compute_tau(request: ComputeTauRequest):
@@ -90,12 +106,23 @@ def compute_tau_async(request: ComputeTauRequest, user: dict = Depends(verify_to
 async def stream_tau_updates(websocket: WebSocket):
     await websocket.accept()
     try:
-        while True:
-            data = await websocket.receive_text()
-            # In a real scenario, process incoming stream chunks
-            await websocket.send_text(f"Processed stream chunk. Current Tau: {np.random.rand()}")
+        from aiokafka import AIOKafkaConsumer
+        consumer = AIOKafkaConsumer(
+            'sys.transitions',
+            bootstrap_servers=settings.kafka_broker.replace('kafka://', ''),
+            group_id="websocket-group"
+        )
+        await consumer.start()
+        try:
+            async for msg in consumer:
+                payload = msg.value.decode('utf-8')
+                await websocket.send_text(payload)
+        finally:
+            await consumer.stop()
     except WebSocketDisconnect:
         print("WebSocket closed")
+    except Exception as e:
+        print(f"WebSocket Error: {e}")
 
 @app.get("/graph/tenant/{tenant_id}/history")
 def get_graph_history(tenant_id: str, limit: int = 10, user: dict = Depends(verify_token)):

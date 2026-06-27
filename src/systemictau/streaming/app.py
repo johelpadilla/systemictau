@@ -9,10 +9,15 @@ import numpy as np
 from systemictau import systemic_tau
 from systemictau.streaming.models import StreamPayload
 from pydantic import ValidationError
+from prometheus_client import Counter
+from systemictau.config import settings
+
+# Observability Metrics
+anomalies_detected = Counter('tau_anomalies_detected_total', 'Total number of systemic anomalies detected')
 
 # Ensure this runs gracefully if faust is missing (e.g. standard install)
 if 'faust' in globals():
-    kafka_broker = os.getenv("KAFKA_BROKER_URL", "kafka://localhost:9092")
+    kafka_broker = settings.kafka_broker
     
     app = faust.App(
         'systemictau-stream-processor',
@@ -25,6 +30,7 @@ if 'faust' in globals():
     # Kafka Topic definitions
     raw_data_topic = app.topic('sys.raw_data', partitions=4)
     transitions_topic = app.topic('sys.transitions', partitions=4)
+    dlq_topic = app.topic('sys.dlq', partitions=4)
     
     # Stateful table to keep a rolling window
     window_state = app.Table('sliding_windows', default=list)
@@ -36,7 +42,8 @@ if 'faust' in globals():
                 # 1. Strict Payload Validation
                 validated_data = StreamPayload(**payload)
             except ValidationError as e:
-                print(f"[FAUST] Dropping malformed payload: {e}")
+                print(f"[FAUST] Validation Error. Routing to DLQ: {e}")
+                await dlq_topic.send(value={"error": str(e), "raw_payload": payload})
                 continue
                 
             tenant_id = validated_data.tenant_id
@@ -61,6 +68,7 @@ if 'faust' in globals():
                 
                 # Check anomaly threshold for Critical Mass (e.g. > 0.8)
                 if latest_tau > 0.8:
+                    anomalies_detected.inc()
                     await transitions_topic.send(value={
                         "tenant_id": tenant_id,
                         "tau": float(latest_tau),

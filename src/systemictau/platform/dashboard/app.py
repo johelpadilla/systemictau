@@ -18,15 +18,38 @@ try:
 except ImportError:
     HAS_FOLIUM = False
 
-API_URL = os.getenv("API_URL", "http://localhost:8000")
-DUMMY_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.dummy.signature"
+from systemictau.config import settings
+
+API_URL = settings.api_url
+
+st.sidebar.header("Authentication")
+if 'token' not in st.session_state:
+    with st.sidebar.form("login_form"):
+        st.write("Login to API")
+        username = st.text_input("Username")
+        password = st.text_input("Password", type="password")
+        if st.form_submit_button("Login"):
+            import requests
+            try:
+                resp = requests.post(f"{API_URL}/token", json={"username": username, "password": password})
+                if resp.status_code == 200:
+                    st.session_state['token'] = resp.json()["access_token"]
+                    st.sidebar.success("Logged in!")
+                else:
+                    st.sidebar.error("Invalid credentials")
+            except Exception as e:
+                st.sidebar.error(f"Login failed: {e}")
+else:
+    st.sidebar.success("Authenticated")
+    if st.sidebar.button("Logout"):
+        del st.session_state['token']
 
 st.set_page_config(page_title="Systemic Tau Platform", page_icon="📈", layout="wide")
 
 st.title("Systemic Tau v5.0 : The Ontological Dynamics Platform")
 st.markdown("Real-time topological data analysis and causal mapping for complex systems.")
 
-tab1, tab2, tab3, tab4, tab5 = st.tabs(["Data Input", "Systemic Tau Computation", "Layer Analysis", "Spatial Analysis", "Neo4j Knowledge Graph"])
+tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["Data Input", "Systemic Tau Computation", "Layer Analysis", "Spatial Analysis", "Neo4j Knowledge Graph", "Live Feed"])
 
 with tab1:
     st.header("Data Input")
@@ -208,15 +231,39 @@ with tab5:
     tenant_id = st.text_input("Tenant ID", value="default")
     if st.button("Fetch Graph History"):
         try:
-            headers = {"Authorization": f"Bearer {DUMMY_TOKEN}"}
-            response = requests.get(f"{API_URL}/graph/tenant/{tenant_id}/history", headers=headers)
-            if response.status_code == 200:
-                data = response.json()
-                st.success("Graph Context Retrieved")
-                for item in data.get("history", []):
-                    with st.expander(f"Transition at t* = {item.get('t_star')} (Tau={item.get('tau')})"):
-                        st.markdown(f"**Description:** {item.get('description')}")
+            if 'token' not in st.session_state:
+                st.warning("Please login first")
             else:
-                st.error(f"API Error: {response.text}")
+                headers = {"Authorization": f"Bearer {st.session_state['token']}"}
+                response = requests.get(f"{API_URL}/graph/tenant/{tenant_id}/history", headers=headers)
+                if response.status_code == 200:
+                    data = response.json()
+                    st.success("Graph Context Retrieved")
+                    for item in data.get("history", []):
+                        with st.expander(f"Transition at t* = {item.get('t_star')} (Tau={item.get('tau')})"):
+                            st.markdown(f"**Description:** {item.get('description')}")
+                else:
+                    st.error(f"API Error: {response.text}")
         except Exception as e:
             st.error(f"Connection failed: {e}")
+
+with tab6:
+    st.header("Live WebSocket Feed")
+    st.markdown("Stream real-time anomalies directly from Kafka.")
+    if st.button("Poll Latest Stream Events"):
+        try:
+            from websockets.sync.client import connect
+            ws_url = API_URL.replace("http://", "ws://").replace("https://", "wss://") + "/ws/stream"
+            with connect(ws_url) as websocket:
+                # Wait briefly for up to 3 messages
+                websocket.timeout = 2.0
+                st.success("Connected to live stream. Listening...")
+                for i in range(3):
+                    try:
+                        message = websocket.recv(timeout=2.0)
+                        st.info(f"New Transition Detected: {message}")
+                    except TimeoutError:
+                        break
+                        
+        except Exception as e:
+            st.error(f"WebSocket Error: {e}")

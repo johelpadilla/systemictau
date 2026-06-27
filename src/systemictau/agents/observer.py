@@ -4,11 +4,13 @@ except ImportError:
     pass
 
 import os
+from tenacity import retry, stop_after_attempt, wait_exponential
 from systemictau.platform.ai import generate_latex_report
 from systemictau.graph.db import KnowledgeGraphService
+from systemictau.config import settings
 
 if 'faust' in globals():
-    kafka_broker = os.getenv("KAFKA_BROKER_URL", "kafka://localhost:9092")
+    kafka_broker = settings.kafka_broker
     
     app = faust.App(
         'systemictau-agent-observer',
@@ -48,13 +50,18 @@ if 'faust' in globals():
             context_str = "\\n".join([f"- At t*={h['t_star']}, tau={h['tau']}: {h['description']}" for h in history])
             
             # 3. Generate Hypothesis Report via LLM with context
+            @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
+            def robust_generate_report(topic):
+                return generate_latex_report(episodes=[1], t_star=0, topic=topic)
+
             try:
                 topic = f"Tenant {tenant_id} stream. Historical context:\\n{context_str}"
-                report = generate_latex_report(episodes=[1], t_star=0, topic=topic)
+                report = robust_generate_report(topic)
                 print("[AGENT OBSERVER] Autonomously generated LaTeX Report with Graph-RAG.")
                 
                 # 4. Persist Report to Graph
                 kg.persist_agent_report(node_id, report)
                 print(f"[AGENT OBSERVER] Persisted report to Neo4j linked to Ascent {node_id}")
             except Exception as e:
-                print(f"[AGENT OBSERVER] LLM Generation Failed: {e}")
+                print(f"[AGENT OBSERVER] LLM Generation Failed after 3 retries: {e}")
+                kg.persist_agent_report(node_id, "Report Generation Failed. Defaulting to Heuristic Fallback.")
