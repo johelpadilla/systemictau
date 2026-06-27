@@ -33,10 +33,12 @@ gis = ["geopandas", "libpysal"]
 validation = ["scikit-learn"]
 performance = ["numba", "dask", "jax", "jaxlib", "pluggy"]
 ai = ["google-genai", "pydantic"]
-full = ["matplotlib>=3.7", "seaborn", "pandas", "xarray", "streamlit", "typer", "fastapi", "uvicorn", "python-multipart", "geopandas", "libpysal", "scikit-learn", "numba", "dask", "folium", "streamlit-folium", "google-genai", "celery", "redis", "websockets", "pyjwt", "jax", "jaxlib", "faust-streaming", "neo4j", "pluggy", "python-rocksdb", "prometheus-client", "pydantic-settings", "tenacity", "aiokafka"]
+desktop = ["customtkinter"]
+full = ["matplotlib>=3.7", "seaborn", "pandas", "xarray", "streamlit", "typer", "fastapi", "uvicorn", "python-multipart", "geopandas", "libpysal", "scikit-learn", "numba", "dask", "folium", "streamlit-folium", "google-genai", "celery", "redis", "websockets", "pyjwt", "jax", "jaxlib", "faust-streaming", "neo4j", "pluggy", "python-rocksdb", "prometheus-client", "pydantic-settings", "tenacity", "aiokafka", "customtkinter"]
 
 [project.scripts]
 systemictau = "systemictau.cli:app"
+systemictau-gui = "systemictau.desktop.app:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
