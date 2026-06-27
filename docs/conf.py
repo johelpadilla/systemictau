@@ -11,8 +11,8 @@ project = 'systemictau'
 copyright = '2026, Johel Padilla-Villanueva'
 author = 'Johel Padilla-Villanueva'
 
-version = '0.1.3'
-release = '0.1.3'
+version = '2.0.1'
+release = '2.0.1'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
