@@ -122,8 +122,8 @@ class SystemicTauApp(BaseApp):
         self.ax4 = self.fig.add_subplot(224)
         self.fig.tight_layout(pad=3.0)
         
-        self.ax1.set_title("Systemic Tau (τ_s) - Magnitude")
-        self.ax2.set_title("Acceleration (a_t)")
+        self.ax1.set_title("Systemic Tau over time: τ_s(t)")
+        self.ax2.set_title("Raw Data & Acceleration (a_t)")
         self.ax3.set_title("Entropic Decay (S_e)")
         self.ax4.set_title("Systemic Coherence (C_s)")
         
@@ -239,19 +239,21 @@ class SystemicTauApp(BaseApp):
                 
             data = numeric_df[target_col].values
             
-            # 1. Systemic Tau (Raw Magnitude)
-            tau_val = np.var(data)
-            t_star = np.argmax(data)
+            window = max(3, len(data) // 20)
             
-            # 2. Acceleration (Second Derivative)
+            # 1. Systemic Tau (Dynamic Variance across time)
+            tau_series = pd.Series(data).rolling(window=window, min_periods=1).var().fillna(0).values
+            tau_val = np.max(tau_series)
+            t_star = np.argmax(tau_series)
+            
+            # 2. Acceleration (Second Derivative of raw data)
             velocity = np.gradient(data)
             acceleration = np.gradient(velocity)
             max_accel = np.max(acceleration)
             
             # 3. Entropic Decay (Rolling Volatility Proxy)
-            window = max(3, len(data) // 20)
-            entropy = pd.Series(data).rolling(window=window, min_periods=1).std().values
-            max_entropy = np.nanmax(entropy)
+            entropy = pd.Series(data).rolling(window=window, min_periods=1).std().fillna(0).values
+            max_entropy = np.max(entropy)
             
             # 4. Systemic Coherence (Rolling Correlation)
             if len(numeric_df.columns) > 1:
@@ -265,6 +267,7 @@ class SystemicTauApp(BaseApp):
             self.math_stats = {
                 "target_col": target_col,
                 "data": data,
+                "tau_series": tau_series,
                 "acceleration": acceleration,
                 "entropy": entropy,
                 "coherence": coherence,
@@ -321,15 +324,17 @@ class SystemicTauApp(BaseApp):
         s = self.math_stats
         t_star = s["t_star"]
         
-        # Ax1: Tau Magnitude
-        self.ax1.plot(s["data"], color="#1f77b4", linewidth=2)
+        # Ax1: Tau Series over time
+        self.ax1.plot(s["tau_series"], color="#1f77b4", linewidth=2, label="Systemic Tau")
         self.ax1.axvline(x=t_star, color='r', linestyle='--', alpha=0.7)
-        self.ax1.set_title(f"Systemic Tau (Magnitude): {s['target_col']}")
+        self.ax1.set_title(f"Dynamic Systemic Tau: {s['target_col']}")
         
-        # Ax2: Acceleration
-        self.ax2.plot(s["acceleration"], color="#ff7f0e", linewidth=1.5)
+        # Ax2: Raw Data & Acceleration
+        ax2_twin = self.ax2.twinx()
+        self.ax2.plot(s["data"], color="#7f7f7f", linewidth=1.5, alpha=0.5, label="Raw Data")
+        ax2_twin.plot(s["acceleration"], color="#ff7f0e", linewidth=1.5, label="Acceleration")
         self.ax2.axvline(x=t_star, color='r', linestyle='--', alpha=0.7)
-        self.ax2.set_title("Acceleration (a_t)")
+        self.ax2.set_title("Raw Data & Acceleration (a_t)")
         
         # Ax3: Entropic Decay
         self.ax3.plot(s["entropy"], color="#2ca02c", linewidth=1.5)
@@ -440,7 +445,7 @@ class SystemicTauApp(BaseApp):
                 pdf.set_font("Courier", size=10)
                 if self.math_stats:
                     s = self.math_stats
-                    pdf.cell(0, 6, f"- Critical Mass Threshold (Max τ_s): {s['tau_val']:.4e}", ln=True)
+                    pdf.cell(0, 6, f"- Critical Mass Threshold (Max Tau_s): {s['tau_val']:.4e}", ln=True)
                     pdf.cell(0, 6, f"- Peak Acceleration (a_t): {s['max_accel']:.4e}", ln=True)
                     pdf.cell(0, 6, f"- Maximum Entropic Decay (S_e): {s['max_entropy']:.4e}", ln=True)
                     pdf.cell(0, 6, f"- Systemic Coherence Trough (C_s): {s['min_coherence']:.4f}", ln=True)
@@ -455,14 +460,17 @@ class SystemicTauApp(BaseApp):
                 pdf.set_font("Arial", 'B', 12)
                 pdf.cell(0, 8, "2. Autonomous Epistemic Peer-Review", ln=True)
                 pdf.set_font("Courier", size=9)
-                clean_log = self.full_log.encode('latin-1', 'replace').decode('latin-1')
+                
+                # Sanitize the log text to remove greek and complex characters that crash fpdf
+                clean_log = self.full_log.replace('τ_s', 'Tau_s').replace('τ', 'Tau')
+                clean_log = clean_log.encode('ascii', 'ignore').decode('ascii')
                 pdf.multi_cell(0, 4, clean_log)
                 
                 pdf.output(save_path)
                 if os.path.exists(temp_img):
                     os.remove(temp_img)
                     
-                self.after(0, lambda: self._update_results(f"\\n[SUCCESS] PDF Exported.\\n"))
+                self.after(0, lambda: self._update_results(f"\\n[SUCCESS] Academic PDF Exported to: {save_path}\\n"))
             except Exception as e:
                 self.after(0, lambda: self._update_results(f"\\n[ERROR] PDF Generation failed: {e}\\n"))
                 
