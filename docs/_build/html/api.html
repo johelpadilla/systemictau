@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>API Reference &#8212; systemictau 2.0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=12dfc556" />
+    <script src="_static/documentation_options.js?v=f5cff4aa"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Tutorial" href="tutorial.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="module-systemictau.core">
+<span id="api-reference"></span><h1>API Reference<a class="headerlink" href="#module-systemictau.core" title="Link to this heading">¶</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="systemictau.core.compute_taus">
+<span class="sig-prename descclassname"><span class="pre">systemictau.core.</span></span><span class="sig-name descname"><span class="pre">compute_taus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">13</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#systemictau.core.compute_taus" title="Link to this definition">¶</a></dt>
+<dd><p>Computes the Systemic Tau (global ordinal agreement) and per-module tau
+over a sliding window of a multivariate time series.</p>
+<section id="parameters">
+<h2>Parameters:<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<dl class="simple">
+<dt>X<span class="classifier">numpy.ndarray</span></dt><dd><p>Multivariate time series of shape (T, N) where T is time steps and N is the number of components.</p>
+</dd>
+<dt>window_size<span class="classifier">int, optional</span></dt><dd><p>Size of the sliding window (default 13).</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h2>Returns:<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<dl class="simple">
+<dt>taus_global<span class="classifier">numpy.ndarray</span></dt><dd><p>1D array of shape (T,) containing the Systemic Tau for each window. 
+The first <cite>window_size - 1</cite> elements will be NaN.</p>
+</dd>
+<dt>taus_per_module<span class="classifier">numpy.ndarray</span></dt><dd><p>2D array of shape (T, N) containing the average Kendall coefficient 
+between module i and all other modules at each step.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function" id="module-systemictau.recd">
+<dt class="sig sig-object py" id="systemictau.recd.accumulate_time">
+<span class="sig-prename descclassname"><span class="pre">systemictau.recd.</span></span><span class="sig-name descname"><span class="pre">accumulate_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">taus_series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">13</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#systemictau.recd.accumulate_time" title="Link to this definition">¶</a></dt>
+<dd><p>Accumulates discrete extramental time T according to the RECD law.</p>
+<p>T_n = sum_k g(tau_s(k)) * Delta t_k</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="systemictau.recd.compute_recd_increments">
+<span class="sig-prename descclassname"><span class="pre">systemictau.recd.</span></span><span class="sig-name descname"><span class="pre">compute_recd_increments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">taus_series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">13</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#systemictau.recd.compute_recd_increments" title="Link to this definition">¶</a></dt>
+<dd><p>Computes the RECD increments Delta t_k and the associated renormalization depths k.</p>
+<section id="id1">
+<h2>Parameters:<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h2>
+<dl class="simple">
+<dt>taus_series<span class="classifier">numpy.ndarray</span></dt><dd><p>1D array of Systemic Tau values.</p>
+</dd>
+<dt>window_size<span class="classifier">int</span></dt><dd><p>The sliding window length n used for normalization.</p>
+</dd>
+<dt>dt0<span class="classifier">float</span></dt><dd><p>Base temporal step.</p>
+</dd>
+</dl>
+</section>
+<section id="id2">
+<h2>Returns:<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h2>
+<dl class="simple">
+<dt>dtk_series<span class="classifier">numpy.ndarray</span></dt><dd><p>The array of increments Delta t_k (0 if gate is closed).</p>
+</dd>
+<dt>gate_series<span class="classifier">numpy.ndarray</span></dt><dd><p>The gate function values.</p>
+</dd>
+<dt>depth_series<span class="classifier">numpy.ndarray</span></dt><dd><p>The calculated renormalization depths k.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="systemictau.recd.gate_function">
+<span class="sig-prename descclassname"><span class="pre">systemictau.recd.</span></span><span class="sig-name descname"><span class="pre">gate_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tau_s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_chaos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.41</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_stable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#systemictau.recd.gate_function" title="Link to this definition">¶</a></dt>
+<dd><p>Computes the gate function g(tau_s) according to the RECD law.</p>
+<section id="id3">
+<h2>Parameters:<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h2>
+<dl class="simple">
+<dt>tau_s<span class="classifier">float or numpy.ndarray</span></dt><dd><p>The Systemic Tau value(s).</p>
+</dd>
+<dt>threshold_chaos<span class="classifier">float</span></dt><dd><p>The boundary of the chaotic band (default 0.41).</p>
+</dd>
+<dt>threshold_stable<span class="classifier">float</span></dt><dd><p>The boundary of the stable regime (default +0.50).</p>
+</dd>
+</dl>
+</section>
+<section id="id4">
+<h2>Returns:<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h2>
+<dl class="simple">
+<dt>g_val<span class="classifier">float or numpy.ndarray</span></dt><dd><p>The evaluated gate function.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function" id="module-systemictau.layers">
+<dt class="sig sig-object py" id="systemictau.layers.compute_antisynchronization">
+<span class="sig-prename descclassname"><span class="pre">systemictau.layers.</span></span><span class="sig-name descname"><span class="pre">compute_antisynchronization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">taus_per_module</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#systemictau.layers.compute_antisynchronization" title="Link to this definition">¶</a></dt>
+<dd><p>Computes A_antis: empirical standard deviation of per-module taus at each step.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="systemictau.layers.consensus_transition">
+<span class="sig-prename descclassname"><span class="pre">systemictau.layers.</span></span><span class="sig-name descname"><span class="pre">consensus_transition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t_frob</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t_ks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#systemictau.layers.consensus_transition" title="Link to this definition">¶</a></dt>
+<dd><p>Returns consensus transition time.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="systemictau.layers.critical_mass_metric">
+<span class="sig-prename descclassname"><span class="pre">systemictau.layers.</span></span><span class="sig-name descname"><span class="pre">critical_mass_metric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hp_z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lam</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">w_hp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.55</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">w_tt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.45</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#systemictau.layers.critical_mass_metric" title="Link to this definition">¶</a></dt>
+<dd><p>Combines Capa 1 indicators into the Critical Mass metric M(k).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="systemictau.layers.detect_reorganization_frob">
+<span class="sig-prename descclassname"><span class="pre">systemictau.layers.</span></span><span class="sig-name descname"><span class="pre">detect_reorganization_frob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">taus_matrix</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#systemictau.layers.detect_reorganization_frob" title="Link to this definition">¶</a></dt>
+<dd><p>Capa 3 detector 1: Frobenius-norm shift in correlation matrix.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="systemictau.layers.detect_reorganization_ks">
+<span class="sig-prename descclassname"><span class="pre">systemictau.layers.</span></span><span class="sig-name descname"><span class="pre">detect_reorganization_ks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dtk_series</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#systemictau.layers.detect_reorganization_ks" title="Link to this definition">¶</a></dt>
+<dd><p>Capa 3 detector 2: Kolmogorov-Smirnov contrast on Deltat_k series.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="systemictau.layers.extract_joint_episodes">
+<span class="sig-prename descclassname"><span class="pre">systemictau.layers.</span></span><span class="sig-name descname"><span class="pre">extract_joint_episodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">A_series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">M_series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theta_A</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.04</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">D_min</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theta_M</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#systemictau.layers.extract_joint_episodes" title="Link to this definition">¶</a></dt>
+<dd><p>Extracts maximal Joint Episodes from the Capa 1 and Capa 2 series.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="systemictau.layers.hyper_persistence">
+<span class="sig-prename descclassname"><span class="pre">systemictau.layers.</span></span><span class="sig-name descname"><span class="pre">hyper_persistence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">taus_series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_chaos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.41</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#systemictau.layers.hyper_persistence" title="Link to this definition">¶</a></dt>
+<dd><p>Computes hyper-persistence z-score and core-hyper indicator.</p>
+<section id="id5">
+<h2>Parameters:<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h2>
+<dl class="simple">
+<dt>taus_series<span class="classifier">numpy.ndarray</span></dt><dd><p>1D array of Systemic Tau values.</p>
+</dd>
+<dt>window_size<span class="classifier">int</span></dt><dd><p>Rolling window size for local mean and std.</p>
+</dd>
+</dl>
+</section>
+<section id="id6">
+<h2>Returns:<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h2>
+<dl class="simple">
+<dt>hp_z<span class="classifier">numpy.ndarray</span></dt><dd><p>z-score of current tau relative to recent window.</p>
+</dd>
+<dt>core_hyper<span class="classifier">numpy.ndarray</span></dt><dd><p>Boolean array, True if in a run of length &gt;= 7 and <a href="#id9"><span class="problematic" id="id10">|tau|</span></a> &lt; 0.41.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="systemictau.layers.rolling_rqa">
+<span class="sig-prename descclassname"><span class="pre">systemictau.layers.</span></span><span class="sig-name descname"><span class="pre">rolling_rqa</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">taus_series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">25</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_line_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius_percentile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#systemictau.layers.rolling_rqa" title="Link to this definition">¶</a></dt>
+<dd><p>Computes a simplified rolling Recurrence Quantification Analysis (RQA).
+Specifically laminarity (LAM) and trapping time (TT).</p>
+</dd></dl>
+
+<dl class="py function" id="module-systemictau.fractal">
+<dt class="sig sig-object py" id="systemictau.fractal.estimate_higuchi_dimension">
+<span class="sig-prename descclassname"><span class="pre">systemictau.fractal.</span></span><span class="sig-name descname"><span class="pre">estimate_higuchi_dimension</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">T_series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#systemictau.fractal.estimate_higuchi_dimension" title="Link to this definition">¶</a></dt>
+<dd><p>Estimates the Higuchi Fractal Dimension of a time series.
+The RECD extramental time T typically yields D ~ 1.98.</p>
+<section id="id7">
+<h2>Parameters:<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h2>
+<dl class="simple">
+<dt>T_series<span class="classifier">numpy.ndarray</span></dt><dd><p>1D array of the cumulative time series (e.g., T_n).</p>
+</dd>
+<dt>k_max<span class="classifier">int</span></dt><dd><p>Maximum window size (delay) to use for computing curve length.</p>
+</dd>
+</dl>
+</section>
+<section id="id8">
+<h2>Returns:<a class="headerlink" href="#id8" title="Link to this heading">¶</a></h2>
+<dl class="simple">
+<dt>D<span class="classifier">float</span></dt><dd><p>The estimated fractal dimension.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">systemictau</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="theory.html">Theory: The Systemic Tau Paradigm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#systemictau.core.compute_taus"><code class="docutils literal notranslate"><span class="pre">compute_taus()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#systemictau.recd.accumulate_time"><code class="docutils literal notranslate"><span class="pre">accumulate_time()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#systemictau.recd.compute_recd_increments"><code class="docutils literal notranslate"><span class="pre">compute_recd_increments()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#systemictau.recd.gate_function"><code class="docutils literal notranslate"><span class="pre">gate_function()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#systemictau.layers.compute_antisynchronization"><code class="docutils literal notranslate"><span class="pre">compute_antisynchronization()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#systemictau.layers.consensus_transition"><code class="docutils literal notranslate"><span class="pre">consensus_transition()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#systemictau.layers.critical_mass_metric"><code class="docutils literal notranslate"><span class="pre">critical_mass_metric()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#systemictau.layers.detect_reorganization_frob"><code class="docutils literal notranslate"><span class="pre">detect_reorganization_frob()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#systemictau.layers.detect_reorganization_ks"><code class="docutils literal notranslate"><span class="pre">detect_reorganization_ks()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#systemictau.layers.extract_joint_episodes"><code class="docutils literal notranslate"><span class="pre">extract_joint_episodes()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#systemictau.layers.hyper_persistence"><code class="docutils literal notranslate"><span class="pre">hyper_persistence()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#systemictau.layers.rolling_rqa"><code class="docutils literal notranslate"><span class="pre">rolling_rqa()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#systemictau.fractal.estimate_higuchi_dimension"><code class="docutils literal notranslate"><span class="pre">estimate_higuchi_dimension()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="tutorial.html" title="previous chapter">Tutorial</a></li>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2026, Johel Padilla-Villanueva.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.4.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+      |
+      <a href="_sources/api.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

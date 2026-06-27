@@ -66,5 +66,43 @@ def plot(
         typer.secho(f"Error: Unknown plot type '{plot_type}'", fg=typer.colors.RED)
         raise typer.Exit(code=1)
 
+@app.command()
+def serve(
+    host: str = typer.Option("127.0.0.1", "--host", help="Host IP to bind"),
+    port: int = typer.Option(8000, "--port", "-p", help="Port to bind")
+):
+    """
+    Starts the Systemic Tau REST API (FastAPI backend).
+    """
+    try:
+        import uvicorn
+        from systemictau.platform.api.main import app as api_app
+    except ImportError:
+        typer.secho("FastAPI/Uvicorn not installed. Run 'pip install systemictau[platform]'", fg=typer.colors.RED)
+        raise typer.Exit(code=1)
+        
+    typer.secho(f"Starting Systemic Tau API on http://{host}:{port}", fg=typer.colors.GREEN)
+    uvicorn.run(api_app, host=host, port=port)
+
+@app.command()
+def ui():
+    """
+    Launches the interactive Systemic Tau Dashboard (Streamlit).
+    """
+    import subprocess
+    import sys
+    
+    try:
+        import streamlit
+    except ImportError:
+        typer.secho("Streamlit not installed. Run 'pip install systemictau[platform]'", fg=typer.colors.RED)
+        raise typer.Exit(code=1)
+        
+    from systemictau.platform.dashboard import app as dash_app
+    app_path = Path(dash_app.__file__)
+    
+    typer.secho("Starting Systemic Tau UI...", fg=typer.colors.GREEN)
+    subprocess.run([sys.executable, "-m", "streamlit", "run", str(app_path)])
+
 if __name__ == "__main__":
     app()

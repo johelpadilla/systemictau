@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "systemictau"
-version = "2.0.1"
+version = "3.0.0-dev"
 description = "Systemic Tau and Discrete Extramental Clock (RECD) implementation"
 authors = [
     {name = "Johel Padilla-Villanueva", email = "joel.padilla2@upr.edu"}
@@ -28,7 +28,10 @@ dependencies = [
 [project.optional-dependencies]
 dev = ["pytest>=7.0.0"]
 visualization = ["matplotlib>=3.7", "seaborn"]
-full = ["matplotlib>=3.7", "seaborn", "pandas", "xarray", "streamlit", "typer"]
+platform = ["fastapi", "uvicorn", "streamlit", "python-multipart", "pandas", "xarray"]
+gis = ["geopandas"]
+validation = ["scikit-learn"]
+full = ["matplotlib>=3.7", "seaborn", "pandas", "xarray", "streamlit", "typer", "fastapi", "uvicorn", "python-multipart", "geopandas", "scikit-learn"]
 
 [project.scripts]
 systemictau = "systemictau.cli:app"
