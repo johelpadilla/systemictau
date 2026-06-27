@@ -140,7 +140,14 @@ class SystemicTauApp(ctk.CTk if ctk else object):
         self._update_results("\\n[2/3] Multi-Agent Engine generating hypotheses...\\n")
         
         try:
-            client = genai.Client(api_key=settings.google_api_key)
+            # Check if key is dummy or empty
+            current_key = settings.google_api_key
+            if not current_key or current_key == "DUMMY_GEMINI_KEY":
+                self._update_results("      -> API Key missing. Requesting from user...\\n")
+                self.after(0, self._prompt_for_api_key)
+                return
+
+            client = genai.Client(api_key=current_key)
             model_id = 'gemini-2.5-flash'
             
             context = f"A data file from the domain '{self.domain_menu.get()}' was analyzed. The system detected: {msg}."
@@ -151,7 +158,11 @@ class SystemicTauApp(ctk.CTk if ctk else object):
             self._update_results(f"      -> Hypothesis: {hypothesis}\\n")
             
         except Exception as e:
-            self._update_results(f"      -> Agent Error: Could not connect to LLM APIs. Check your .env file. ({e})\\n")
+            if "API key not valid" in str(e):
+                self._update_results("      -> API Key is invalid. Requesting new key...\\n")
+                self.after(0, self._prompt_for_api_key)
+            else:
+                self._update_results(f"      -> Agent Error: {e}\\n")
             return
             
         self._update_results("\\n[3/3] Fetching empirical evidence...\\n")
@@ -162,6 +173,20 @@ class SystemicTauApp(ctk.CTk if ctk else object):
         
         # Store for "Explain Simply"
         self.last_hypothesis = hypothesis
+
+    def _prompt_for_api_key(self):
+        dialog = ctk.CTkInputDialog(text="Enter your Google Gemini API Key:", title="API Key Required")
+        key = dialog.get_input()
+        if key:
+            # Save to .env file
+            env_path = os.path.join(os.getcwd(), ".env")
+            with open(env_path, "a") as f:
+                f.write(f"\\nGOOGLE_API_KEY={key}\\n")
+            # Update running settings
+            settings.google_api_key = key
+            self._update_results("      -> API Key saved. Please click 'Analyze Data' again.\\n")
+        else:
+            self._update_results("      -> Analysis aborted: No API key provided.\\n")
 
     def _update_results(self, text):
         # Helper to update textbox from thread safely
