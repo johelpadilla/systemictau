@@ -67,16 +67,22 @@ class SystemicTauApp(BaseApp):
         self.domain_label = ctk.CTkLabel(self.sidebar_frame, text="Data Domain:", anchor="w")
         self.domain_label.grid(row=2, column=0, padx=20, pady=(20, 0))
         self.domain_menu = ctk.CTkOptionMenu(self.sidebar_frame, values=["Epidemiology", "Finance", "Ecology", "General"])
-        self.domain_menu.grid(row=3, column=0, padx=20, pady=(10, 20))
+        self.domain_menu.grid(row=3, column=0, padx=20, pady=(10, 10))
+        
+        # Target Variable Selection
+        self.target_label = ctk.CTkLabel(self.sidebar_frame, text="Target Parameter (τ_s):", anchor="w")
+        self.target_label.grid(row=4, column=0, padx=20, pady=(10, 0))
+        self.target_menu = ctk.CTkOptionMenu(self.sidebar_frame, values=["[Load File First]"], command=self._redraw_preview)
+        self.target_menu.grid(row=5, column=0, padx=20, pady=(10, 20))
         
         if HAS_DND:
             self.dnd_label = ctk.CTkLabel(self.sidebar_frame, text="[Drag & Drop Active]", text_color="green", font=ctk.CTkFont(size=10))
-            self.dnd_label.grid(row=4, column=0, padx=20, pady=5)
+            self.dnd_label.grid(row=6, column=0, padx=20, pady=5)
             self.drop_target_register(DND_FILES)
             self.dnd_bind('<<Drop>>', self.handle_dnd)
             
         self.advanced_btn = ctk.CTkButton(self.sidebar_frame, text="Advanced Settings", state="disabled", command=self.open_advanced_settings)
-        self.advanced_btn.grid(row=5, column=0, padx=20, pady=20, sticky="s")
+        self.advanced_btn.grid(row=7, column=0, padx=20, pady=20, sticky="s")
 
         # -------------------------------------
         # MAIN FRAME
@@ -187,14 +193,24 @@ class SystemicTauApp(BaseApp):
             else:
                 self.df = pd.read_excel(file_path)
                 
-            numeric_cols = self.df.select_dtypes(include='number').columns
+            numeric_cols = self.df.select_dtypes(include='number').columns.tolist()
             if len(numeric_cols) > 0:
-                self.ax1.clear(); self.ax2.clear(); self.ax3.clear(); self.ax4.clear()
-                self.ax1.plot(self.df[numeric_cols[0]].values, color="#1f77b4")
-                self.ax1.set_title(f"Preview: {numeric_cols[0]}")
-                self.canvas.draw()
+                self.target_menu.configure(values=numeric_cols)
+                self.target_menu.set(numeric_cols[0])
+                self._redraw_preview(numeric_cols[0])
+            else:
+                self.target_menu.configure(values=["[No Numeric Data]"])
+                self.target_menu.set("[No Numeric Data]")
         except Exception as e:
             self.file_label.configure(text=f"Error reading file: {e}")
+            
+    def _redraw_preview(self, col_name):
+        if self.df is None or col_name not in self.df.columns:
+            return
+        self.ax1.clear(); self.ax2.clear(); self.ax3.clear(); self.ax4.clear()
+        self.ax1.plot(self.df[col_name].values, color="#1f77b4")
+        self.ax1.set_title(f"Preview: {col_name}")
+        self.canvas.draw()
             
     def analyze_data(self):
         if not self.loaded_file_path or self.df is None:
@@ -212,7 +228,10 @@ class SystemicTauApp(BaseApp):
                 raise ValueError("No numeric columns found in data.")
                 
             # --- MATHEMATICAL ENGINE ---
-            target_col = numeric_df.var().idxmax()
+            target_col = self.target_menu.get()
+            if target_col not in numeric_df.columns:
+                raise ValueError(f"Selected column '{target_col}' is not valid or not numeric.")
+                
             data = numeric_df[target_col].values
             
             # 1. Systemic Tau (Raw Magnitude)

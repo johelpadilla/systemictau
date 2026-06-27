@@ -1,6 +1,15 @@
 from google import genai
 from systemictau.config import settings
 
+TAU_KNOWLEDGE_BASE = """
+SYSTEMIC TAU (τ_s) THEORETICAL FRAMEWORK:
+1. Ontological Axiom: Complex systems are not just data points; they are bounded by 'extramental coherence' (the physical/structural reality of their connections).
+2. The Tau Metric: τ_s quantifies this coherence over time. When τ_s hits a critical mass threshold (M*), a phase transition (t*) is mathematically inevitable.
+3. Topological Reorganization: At t*, the system cannot sustain its current complexity and undergoes 'cascading failure geometry' or 'structural bifurcation' to survive, shedding excess entropy.
+4. Entropic Decay: The buildup of systemic chaos (S_e) acts as the catalyst for these reorganizations.
+You MUST interpret all data strictly through these axioms. Do not use generic explanations. Use formal terminology: extramental coherence, topological reorganization, structural breakpoint, entropic decay.
+"""
+
 def run_discovery_engine_sync(context: str, tau_val: float, update_callback=None):
     """
     The True Systemic Tau Epistemic Engine (Standalone Version).
@@ -32,6 +41,7 @@ def run_discovery_engine_sync(context: str, tau_val: float, update_callback=None
     # ---------------------------------------------------------
     log("\\n[Agent 1: Ontologist] Formulating initial hypothesis based on Tau transition...\\n")
     ontologist_prompt = (
+        f"{TAU_KNOWLEDGE_BASE}\\n\\n"
         f"Context: {context}\\n"
         f"Mathematical Transition (Tau_s): {tau_val}\\n\\n"
         "You are the Systemic Tau AI Ontologist. According to the Systemic Tau paradigm, Tau (τ_s) quantifies "
@@ -66,6 +76,7 @@ def run_discovery_engine_sync(context: str, tau_val: float, update_callback=None
     # ---------------------------------------------------------
     log("\\n[Agent 3A: Advocate] Defending the hypothesis...\\n")
     advocate_prompt = (
+        f"{TAU_KNOWLEDGE_BASE}\\n\\n"
         f"Hypothesis: {hypothesis}\\n"
         f"Evidence: {evidence_summary}\\n\\n"
         "You are the Systemic Tau Advocate. Argue aggressively in 2-3 sentences why this empirical evidence "
@@ -84,6 +95,7 @@ def run_discovery_engine_sync(context: str, tau_val: float, update_callback=None
     # ---------------------------------------------------------
     log("\\n[Agent 3B: Critic] Attacking the hypothesis...\\n")
     critic_prompt = (
+        f"{TAU_KNOWLEDGE_BASE}\\n\\n"
         f"Systemic Tau Hypothesis: {hypothesis}\\n"
         f"Evidence: {evidence_summary}\\n\\n"
         "You are the Systemic Tau Critic. Argue aggressively in 2-3 sentences why this evidence "
