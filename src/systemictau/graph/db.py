@@ -129,3 +129,28 @@ class KnowledgeGraphService:
         """
         with self.driver.session() as session:
             session.run(query, node_id=hypothesis_node_id, source=source, summary=summary, supports=supports)
+
+    def persist_tool_usage(self, evidence_node_id: int, tool_name: str, version: str = "1.0"):
+        if not self.driver:
+            return
+        query = """
+        MATCH (e:EvidenceNode) WHERE id(e) = $node_id
+        MERGE (t:ToolNode {name: $tool_name, version: $version})
+        CREATE (e)-[:COLLECTED_VIA]->(t)
+        """
+        with self.driver.session() as session:
+            session.run(query, node_id=evidence_node_id, tool_name=tool_name, version=version)
+            
+    def correlate_hypotheses(self, h1_id: int, h2_id: int, relationship_type: str):
+        """
+        relationship_type should be 'CORROBORATES' or 'CONTRADICTS'
+        """
+        if not self.driver or relationship_type not in ["CORROBORATES", "CONTRADICTS"]:
+            return
+        query = f"""
+        MATCH (h1:HypothesisNode), (h2:HypothesisNode)
+        WHERE id(h1) = $h1_id AND id(h2) = $h2_id
+        CREATE (h1)-[:{relationship_type}]->(h2)
+        """
+        with self.driver.session() as session:
+            session.run(query, h1_id=h1_id, h2_id=h2_id)

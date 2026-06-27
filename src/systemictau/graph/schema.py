@@ -24,3 +24,12 @@ class EvidenceNode(BaseModel):
     source: str = Field(..., description="External tool or database used (e.g. PubMed, FinAPI)")
     data_summary: str = Field(..., description="Summary of the empirical evidence fetched")
     supports_hypothesis: bool = Field(..., description="True if evidence corroborates the claim, False if it refutes it")
+
+class ToolNode(BaseModel):
+    name: str = Field(..., description="Name of the tool (e.g. PubMedSearchTool)")
+    version: str = Field(default="1.0", description="Version of the tool used")
+
+class TheoryNode(BaseModel):
+    unified_claim: str = Field(..., description="The synthesized theory across multiple corroborated hypotheses")
+    confidence: float = Field(..., description="Aggregated confidence score")
+    timestamp: Optional[int] = Field(None, description="Unix timestamp of theory synthesis")
