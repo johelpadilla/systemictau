@@ -16,11 +16,13 @@ if 'faust' in globals():
         'systemictau-stream-processor',
         broker=kafka_broker,
         value_serializer='json',
+        store='rocksdb://', # Enables durable local state recovery
+        topic_partitions=4, # Horizontal scaling
     )
     
     # Kafka Topic definitions
-    raw_data_topic = app.topic('sys.raw_data')
-    transitions_topic = app.topic('sys.transitions')
+    raw_data_topic = app.topic('sys.raw_data', partitions=4)
+    transitions_topic = app.topic('sys.transitions', partitions=4)
     
     # Stateful table to keep a rolling window
     window_state = app.Table('sliding_windows', default=list)

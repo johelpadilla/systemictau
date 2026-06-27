@@ -43,11 +43,15 @@ if 'faust' in globals():
             )
             print(f"[AGENT OBSERVER] Persisted to Neo4j Graph. Node ID: {node_id}")
             
-            # 2. Generate Hypothesis Report via LLM
-            # (In production, this would query Neo4j for historical context before prompting the LLM)
+            # 2. Query Neo4j for Historical Context (Graph-RAG)
+            history = kg.get_historical_context(tenant_id=tenant_id)
+            context_str = "\\n".join([f"- At t*={h['t_star']}, tau={h['tau']}: {h['description']}" for h in history])
+            
+            # 3. Generate Hypothesis Report via LLM with context
             try:
-                report = generate_latex_report(episodes=[1], t_star=0, topic=f"Tenant {tenant_id} stream")
-                print("[AGENT OBSERVER] Autonomously generated LaTeX Report:")
+                topic = f"Tenant {tenant_id} stream. Historical context:\\n{context_str}"
+                report = generate_latex_report(episodes=[1], t_star=0, topic=topic)
+                print("[AGENT OBSERVER] Autonomously generated LaTeX Report with Graph-RAG:")
                 print(report)
             except Exception as e:
                 print(f"[AGENT OBSERVER] LLM Generation Failed: {e}")

@@ -43,3 +43,20 @@ class KnowledgeGraphService:
         with self.driver.session() as session:
             result = session.run(query, tenant_id=tenant_id, t_star=t_star, tau_value=tau_value, description=description)
             return result.single()["node_id"]
+            
+    def get_historical_context(self, tenant_id: str, limit: int = 5) -> list:
+        """
+        Retrieves the last N transitions for a specific tenant to provide Graph-RAG context.
+        """
+        if not self.driver:
+            return []
+            
+        query = """
+        MATCH (s:System {tenant_id: $tenant_id})-[:UNDERWENT]->(a:OntologicalAscent)
+        RETURN a.t_star AS t_star, a.tau AS tau, a.description AS description, a.timestamp AS timestamp
+        ORDER BY a.timestamp DESC
+        LIMIT $limit
+        """
+        with self.driver.session() as session:
+            result = session.run(query, tenant_id=tenant_id, limit=limit)
+            return [record.data() for record in result]

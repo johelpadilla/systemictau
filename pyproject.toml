@@ -28,12 +28,12 @@ dependencies = [
 [project.optional-dependencies]
 dev = ["pytest>=7.0.0", "pytest-cov>=4.0.0"]
 visualization = ["matplotlib>=3.7", "seaborn"]
-platform = ["fastapi", "uvicorn", "streamlit", "python-multipart", "pandas", "xarray", "folium", "streamlit-folium", "celery", "redis", "websockets", "pyjwt", "faust-streaming", "neo4j"]
+platform = ["fastapi", "uvicorn", "streamlit", "python-multipart", "pandas", "xarray", "folium", "streamlit-folium", "celery", "redis", "websockets", "pyjwt", "faust-streaming", "neo4j", "python-rocksdb", "prometheus-client"]
 gis = ["geopandas", "libpysal"]
 validation = ["scikit-learn"]
 performance = ["numba", "dask", "jax", "jaxlib", "pluggy"]
 ai = ["google-genai", "pydantic"]
-full = ["matplotlib>=3.7", "seaborn", "pandas", "xarray", "streamlit", "typer", "fastapi", "uvicorn", "python-multipart", "geopandas", "libpysal", "scikit-learn", "numba", "dask", "folium", "streamlit-folium", "google-genai", "celery", "redis", "websockets", "pyjwt", "jax", "jaxlib", "faust-streaming", "neo4j", "pluggy"]
+full = ["matplotlib>=3.7", "seaborn", "pandas", "xarray", "streamlit", "typer", "fastapi", "uvicorn", "python-multipart", "geopandas", "libpysal", "scikit-learn", "numba", "dask", "folium", "streamlit-folium", "google-genai", "celery", "redis", "websockets", "pyjwt", "jax", "jaxlib", "faust-streaming", "neo4j", "pluggy", "python-rocksdb", "prometheus-client"]
 
 [project.scripts]
 systemictau = "systemictau.cli:app"
