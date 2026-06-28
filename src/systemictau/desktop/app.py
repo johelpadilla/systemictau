@@ -265,7 +265,7 @@ class SystemicTauApp(BaseApp):
         card.grid(row=row, column=col, columnspan=colspan, padx=5, pady=5, sticky="nsew")
         card.grid_columnconfigure(0, weight=1)
         
-        lbl_title = ctk.CTkLabel(card, text=title, font=ctk.CTkFont(size=11, weight="bold"), text_color="gray50")
+        lbl_title = ctk.CTkLabel(card, text=title, font=ctk.CTkFont(size=11, weight="bold"), text_color=("gray30", "gray70"))
         lbl_title.grid(row=0, column=0, pady=(5, 0))
         
         lbl_value = ctk.CTkLabel(card, text="--", font=ctk.CTkFont(size=val_size, weight="bold"), text_color=val_color)
