@@ -135,6 +135,7 @@ class SystemicTauApp(BaseApp):
         self.fig1 = Figure(figsize=(10, 5), dpi=100)
         self.ax1 = self.fig1.add_subplot(221)
         self.ax2 = self.fig1.add_subplot(222)
+        self.ax2_twin = self.ax2.twinx()
         self.ax3 = self.fig1.add_subplot(223)
         self.ax4 = self.fig1.add_subplot(224)
         self.fig1.tight_layout(pad=3.0)
@@ -270,6 +271,7 @@ class SystemicTauApp(BaseApp):
             return
         self.ax1.clear()
         self.ax2.clear()
+        self.ax2_twin.clear()
         self.ax3.clear()
         self.ax4.clear()
         self.ax1.plot(self.df[col_name].values, color="#1f77b4")
@@ -457,6 +459,7 @@ class SystemicTauApp(BaseApp):
     def _highlight_graph(self):
         self.ax1.clear()
         self.ax2.clear()
+        self.ax2_twin.clear()
         self.ax3.clear()
         self.ax4.clear()
         self.ax_ps.clear()
@@ -470,8 +473,8 @@ class SystemicTauApp(BaseApp):
                 time_index = pd.to_datetime(self.df[self.time_col])
                 t_star_val = time_index.iloc[t_star]
             except Exception:
-                time_index = self.df[self.time_col].astype(str).tolist()
-                t_star_val = time_index[t_star]
+                time_index = np.arange(len(s["data"]))
+                t_star_val = t_star
         else:
             t_star_val = t_star
         
@@ -482,8 +485,7 @@ class SystemicTauApp(BaseApp):
         
         # Ax2: Raw Data & Acceleration
         self.ax2.plot(time_index, s["data"], color="#7f7f7f", linewidth=1.5, alpha=0.5, label="Raw Data")
-        ax2_twin = self.ax2.twinx()
-        ax2_twin.plot(time_index, s["acceleration"], color="#ff7f0e", linewidth=1.5, label="Acceleration")
+        self.ax2_twin.plot(time_index, s["acceleration"], color="#ff7f0e", linewidth=1.5, label="Acceleration")
         self.ax2.axvline(x=t_star_val, color='r', linestyle='--', alpha=0.7)
         self.ax2.set_title("Raw Data & Acceleration (a_t)")
         
