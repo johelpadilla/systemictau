@@ -475,10 +475,15 @@ class SystemicTauApp(BaseApp):
                 surr_tau = pd.Series(shuffled).rolling(window=window, min_periods=1).var().fillna(0).max()
                 surrogate_taus.append(surr_tau)
             p_value = np.sum(np.array(surrogate_taus) >= tau_val) / n_perm
-            significance_str = "Statistically Significant" if p_value < 0.05 else "Indistinguishable from Random Noise"
+            if p_value < 0.05:
+                significance_str = "Statistically Significant. Strong evidence of topological structural break."
+            elif p_value < 0.10:
+                significance_str = "Marginally Significant. Weak evidence; anomaly approaches random noise."
+            else:
+                significance_str = "Not Significant. Under the Null Hypothesis, this peak easily arises by chance."
             
             # 3. Early Warning Signals (Precursors) & Objective Transition Metrics
-            precursor_signal = "None Detected (Sudden Shock)"
+            precursor_signal = "None Detected (Sudden Shock). The system showed no variance/AR-1 buildup."
             if t_star > window:
                 # Calculate lag-1 autocorrelation leading up to the break (Critical Slowing Down)
                 pre_data = data[:t_star]
@@ -487,33 +492,60 @@ class SystemicTauApp(BaseApp):
                     recent_ar1 = ar1_series[-window:]
                     slope = np.polyfit(np.arange(len(recent_ar1)), recent_ar1, 1)[0]
                     if slope > 0.05:
-                        precursor_signal = "Critical Slowing Down Detected (AR-1 Increase)"
+                        precursor_signal = f"Critical Slowing Down Detected (AR-1 Slope = +{slope:.3f}). System gave early warnings."
+                    else:
+                        precursor_signal = f"Sudden Shock (AR-1 Slope = {slope:.3f}). No Critical Slowing Down detected."
             
-            # FWHM (Full Width at Half Maximum)
-            threshold_50 = tau_val * 0.5
-            peak_indices = np.where(tau_series >= threshold_50)[0]
-            if len(peak_indices) > 0:
-                fwhm_duration = 0
-                for i in range(t_star, -1, -1):
-                    if tau_series[i] >= threshold_50:
-                        fwhm_duration += 1
-                    else:
-                        break
-                for i in range(t_star+1, len(tau_series)):
-                    if tau_series[i] >= threshold_50:
-                        fwhm_duration += 1
-                    else:
-                        break
-            else:
-                fwhm_duration = 1
+            # 4. Uncertainty Bounds (FWHM & Relaxation)
+            fwhms = []
+            relaxations = []
+            for w_test, t_test, _ in sensitivity_matrix:
+                t_test_series = pd.Series(data).rolling(window=w_test, min_periods=1).var().fillna(0).values
+                tau_test_val = np.max(t_test_series) if len(t_test_series) > 0 else 0
+                threshold_50 = tau_test_val * 0.5
                 
-            # Relaxation Time
-            relaxation_time = "> Data Limit"
-            baseline_upper = tau_mean_hist + tau_std_hist
-            for i in range(t_star+1, len(tau_series)):
-                if tau_series[i] <= baseline_upper:
-                    relaxation_time = f"{i - t_star} periods"
-                    break
+                f_dur = 0
+                for i in range(t_test, -1, -1):
+                    if t_test_series[i] >= threshold_50:
+                        f_dur += 1
+                    else:
+                        break
+                for i in range(t_test+1, len(t_test_series)):
+                    if t_test_series[i] >= threshold_50:
+                        f_dur += 1
+                    else:
+                        break
+                fwhms.append(max(1, f_dur))
+                
+                # Relaxation
+                mean_hist = np.mean(t_test_series[:t_test]) if t_test > 0 else np.mean(t_test_series)
+                std_hist = np.std(t_test_series[:t_test]) if t_test > 0 else np.std(t_test_series)
+                r_dur = len(t_test_series) - t_test
+                for i in range(t_test+1, len(t_test_series)):
+                    if t_test_series[i] <= (mean_hist + std_hist):
+                        r_dur = i - t_test
+                        break
+                relaxations.append(r_dur)
+                
+            fwhm_str = f"{np.mean(fwhms):.1f} +/- {np.std(fwhms):.1f}"
+            relax_str = f"{np.mean(relaxations):.1f} +/- {np.std(relaxations):.1f}"
+            
+            # Post-Collapse Regime
+            post_mean = np.mean(tau_series[t_star+1:]) if t_star < len(tau_series)-1 else tau_mean_hist
+            if post_mean > tau_mean_hist + 2*tau_std_hist:
+                post_regime = "Hyper-volatile (New Normal is structurally unstable)"
+            elif post_mean < tau_mean_hist - tau_std_hist:
+                post_regime = "Hypo-volatile (System suppressed or dead)"
+            else:
+                post_regime = "Returned to historical baseline"
+                
+            # Sensitivity Drift
+            t_star_arr = [x[1] for x in sensitivity_matrix]
+            t_std = np.std(t_star_arr)
+            if t_std > 3:
+                sensitivity_narrative = f"WARNING: High Parameter Sensitivity (Std = {t_std:.1f} periods). Breakpoint shifts significantly, indicating a protracted, multi-scale crisis."
+            else:
+                sensitivity_narrative = f"Highly Stable (Std = {t_std:.1f} periods). Breakpoint is robust to parameter changes, indicating a true instantaneous shock."
                 
             multivariate_count = len(numeric_df.columns)
             
@@ -534,11 +566,13 @@ class SystemicTauApp(BaseApp):
                 "snr": snr,
                 "window": window,
                 "sensitivity_matrix": sensitivity_matrix,
+                "sensitivity_narrative": sensitivity_narrative,
                 "effect_size": effect_size,
                 "p_value": p_value,
                 "significance_str": significance_str,
-                "fwhm_duration": fwhm_duration,
-                "relaxation_time": relaxation_time,
+                "fwhm_str": fwhm_str,
+                "relax_str": relax_str,
+                "post_regime": post_regime,
                 "precursor_signal": precursor_signal,
                 "multivariate_count": multivariate_count,
                 "n_perm": n_perm
@@ -791,14 +825,16 @@ class SystemicTauApp(BaseApp):
             
             f"5. ROBUSTNESS & STATISTICAL VALIDATION:\n"
             f"   - Null Model (Monte Carlo): {s['n_perm']} unrestricted random surrogates evaluated.\n"
-            f"     Result: p-value = {s['p_value']:.4f} ({s['significance_str']}).\n"
+            f"     Result: p-value = {s['p_value']:.4f} -> {s['significance_str']}\n"
             f"   - Effect Size: {s['effect_size']:.2f} standard deviations above historical baseline.\n"
-            f"   - Early Warning Signals: {s['precursor_signal']}.\n"
-            f"   - Transition Geometry: FWHM = {s['fwhm_duration']} periods | Relaxation Time = {s['relaxation_time']}.\n"
+            f"   - Early Warning Signals: {s['precursor_signal']}\n"
+            f"   - Transition Geometry: FWHM = {s['fwhm_str']} periods | Relaxation Time = {s['relax_str']} periods.\n"
+            f"   - Post-Collapse State: {s['post_regime']}.\n"
             f"   - Multivariate Synchrony: Evaluated jointly across {s['multivariate_count']} variables.\n\n"
             f"   [SENSITIVITY MATRIX]\n"
             f"   Window | Breakpoint (t*) | Max Tau_s\n"
-            f"{matrix_str}\n"
+            f"{matrix_str}"
+            f"   -> {s['sensitivity_narrative']}\n"
             
             f"---------------------------------------\n"
             f"METHODOLOGICAL PARAMETERS:\n"
