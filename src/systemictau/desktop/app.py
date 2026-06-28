@@ -4,8 +4,37 @@ import threading
 import numpy as np
 import pandas as pd
 from google import genai
+import tkinter as tk
 from systemictau.config import settings
 from systemictau.agents.epistemic_engine import run_discovery_engine_sync
+
+class ToolTip(object):
+    def __init__(self, widget, text='widget info'):
+        self.widget = widget
+        self.text = text
+        self.widget.bind("<Enter>", self.enter)
+        self.widget.bind("<Leave>", self.leave)
+        self.tw = None
+
+    def enter(self, event=None):
+        x = y = 0
+        x, y, cx, cy = self.widget.bbox("insert") if hasattr(self.widget, 'bbox') and self.widget.bbox("insert") else (0,0,0,0)
+        x += self.widget.winfo_rootx() + 25
+        y += self.widget.winfo_rooty() + 25
+        
+        self.tw = tk.Toplevel(self.widget)
+        self.tw.wm_overrideredirect(True)
+        self.tw.wm_geometry(f"+{x}+{y}")
+        
+        label = tk.Label(self.tw, text=self.text, justify='left',
+                       background="#1c1c1c", foreground="white", relief='solid', borderwidth=1,
+                       font=("Arial", "12", "normal"), padx=10, pady=5)
+        label.pack(ipadx=1, ipady=1)
+
+    def leave(self, event=None):
+        if self.tw:
+            self.tw.destroy()
+            self.tw = None
 
 try:
     from fpdf import FPDF
@@ -84,6 +113,9 @@ class SystemicTauApp(BaseApp):
         
         self.optimize_btn = ctk.CTkButton(self.sidebar_frame, text="⚡ Auto-Optimize Window", command=self.optimize_window, fg_color="#2ca02c", hover_color="#238023")
         self.optimize_btn.grid(row=8, column=0, padx=20, pady=(0, 10))
+        
+        self.animate_btn = ctk.CTkButton(self.sidebar_frame, text="▶ Animate Phase Space", command=self.animate_phase_space, state="disabled", fg_color="#ff7f0e", hover_color="#d62728")
+        self.animate_btn.grid(row=9, column=0, padx=20, pady=(0, 10))
         
         # AI Epistemic Engine Switch
         self.run_ai_switch = ctk.CTkSwitch(self.sidebar_frame, text="Enable AI Agents")
@@ -183,11 +215,11 @@ class SystemicTauApp(BaseApp):
         
         ctk.CTkLabel(self.metrics_frame, text="TOPOLOGICAL METRICS", font=ctk.CTkFont(size=14, weight="bold")).grid(row=0, column=0, columnspan=2, pady=(0, 10))
         
-        self.lbl_tstar = self._create_metric_card(self.metrics_frame, "t* (Structural Breakpoint)", 1, 0, colspan=2, val_color="#ff7f0e", val_size=24)
-        self.lbl_tau = self._create_metric_card(self.metrics_frame, "Max τ_s (Mass)", 2, 0)
-        self.lbl_accel = self._create_metric_card(self.metrics_frame, "Peak a_t (Momentum)", 2, 1)
-        self.lbl_entropy = self._create_metric_card(self.metrics_frame, "Max S_e (Chaos)", 3, 0)
-        self.lbl_coherence = self._create_metric_card(self.metrics_frame, "Min C_s (Coupling)", 3, 1)
+        self.lbl_tstar = self._create_metric_card(self.metrics_frame, "t* (Structural Breakpoint)", 1, 0, colspan=2, val_color="#ff7f0e", val_size=24, tooltip_text="The exact time index where the system crossed its structural stability threshold.")
+        self.lbl_tau = self._create_metric_card(self.metrics_frame, "Max τ_s (Mass)", 2, 0, tooltip_text="Maximum variance magnitude. Represents the physical topological mass of the transition.")
+        self.lbl_accel = self._create_metric_card(self.metrics_frame, "Peak a_t (Momentum)", 2, 1, tooltip_text="Peak 2nd derivative. Indicates the absolute momentum forcing the structural collapse.")
+        self.lbl_entropy = self._create_metric_card(self.metrics_frame, "Max S_e (Chaos)", 3, 0, tooltip_text="Peak volatility proxy. Measures the internal thermodynamic chaos accumulated.")
+        self.lbl_coherence = self._create_metric_card(self.metrics_frame, "Min C_s (Coupling)", 3, 1, tooltip_text="Multidimensional eigenvalue minimum. Tracks the desynchronization of the system's components.")
 
         # AI Epistemic Log
         self.results_box = ctk.CTkTextbox(self.bottom_frame, font=ctk.CTkFont(family="Courier", size=12))
@@ -204,7 +236,7 @@ class SystemicTauApp(BaseApp):
         self.export_btn = ctk.CTkButton(self.actions_frame, text="Export Academic PDF", command=self.export_report)
         self.export_btn.pack(pady=10)
 
-    def _create_metric_card(self, parent, title, row, col, colspan=1, val_color=None, val_size=16):
+    def _create_metric_card(self, parent, title, row, col, colspan=1, val_color=None, val_size=16, tooltip_text=""):
         card = ctk.CTkFrame(parent, corner_radius=8, fg_color=("gray85", "gray20"))
         card.grid(row=row, column=col, columnspan=colspan, padx=5, pady=5, sticky="nsew")
         card.grid_columnconfigure(0, weight=1)
@@ -214,6 +246,12 @@ class SystemicTauApp(BaseApp):
         
         lbl_value = ctk.CTkLabel(card, text="--", font=ctk.CTkFont(size=val_size, weight="bold"), text_color=val_color)
         lbl_value.grid(row=1, column=0, pady=(0, 5))
+        
+        if tooltip_text:
+            ToolTip(card, tooltip_text)
+            ToolTip(lbl_title, tooltip_text)
+            ToolTip(lbl_value, tooltip_text)
+            
         return lbl_value
 
     def _on_slider_change(self, value):
@@ -460,6 +498,48 @@ class SystemicTauApp(BaseApp):
             else:
                 self._update_results(f"\n[ERROR] Analysis failed: {e}\n")
                 
+    def animate_phase_space(self):
+        if not self.math_stats:
+            return
+        self.tabview.set("Phase Space")
+        s = self.math_stats
+        self.ax_ps.clear()
+        self.ax_ps.set_title("Phase Space Trajectory Animation")
+        self.ax_ps.set_xlabel("System State (Raw Data)")
+        self.ax_ps.set_ylabel("System Momentum (Acceleration)")
+        
+        data = s["data"]
+        acc = s["acceleration"]
+        self.ax_ps.set_xlim(np.min(data) * 0.9, np.max(data) * 1.1)
+        self.ax_ps.set_ylim(np.min(acc) * 0.9, np.max(acc) * 1.1)
+        
+        self.anim_frame = 0
+        self.anim_max = len(data)
+        self.anim_colors = np.arange(self.anim_max)
+        self.animate_btn.configure(state="disabled")
+        self._animate_step()
+
+    def _animate_step(self):
+        if not hasattr(self, 'anim_frame') or self.anim_frame >= self.anim_max:
+            s = self.math_stats
+            t_star = s["t_star"]
+            self.ax_ps.scatter(s["data"][t_star], s["acceleration"][t_star], color='red', marker='*', s=200, label="t* Collapse")
+            self.ax_ps.legend()
+            self.canvas2.draw()
+            self.animate_btn.configure(state="normal")
+            return
+            
+        chunk = max(1, self.anim_max // 50)
+        end_idx = min(self.anim_frame + chunk, self.anim_max)
+        
+        s = self.math_stats
+        self.ax_ps.plot(s["data"][self.anim_frame:end_idx+1], s["acceleration"][self.anim_frame:end_idx+1], color="gray", alpha=0.5, linewidth=1)
+        self.ax_ps.scatter(s["data"][self.anim_frame:end_idx], s["acceleration"][self.anim_frame:end_idx], c=self.anim_colors[self.anim_frame:end_idx], cmap="viridis", alpha=0.7, s=20, vmin=0, vmax=self.anim_max)
+        
+        self.canvas2.draw()
+        self.anim_frame += chunk
+        self.after(20, self._animate_step)
+        
     def _highlight_graph(self):
         self.ax1.clear()
         self.ax2.clear()
@@ -478,7 +558,24 @@ class SystemicTauApp(BaseApp):
         # Ax1: Tau Series over time
         self.ax1.plot(time_index, s["tau_series"], color="#1f77b4", linewidth=2, label="Systemic Tau")
         self.ax1.axvline(x=t_star_val, color='r', linestyle='--', alpha=0.7)
+        
+        # Calculate thresholds
+        pre_break_tau = s["tau_series"][:max(1, t_star)]
+        tau_danger = np.mean(pre_break_tau) + 3 * np.std(pre_break_tau)
+        self.ax1.axhline(y=tau_danger, color='red', linestyle=':', alpha=0.5, label="Historical Stability Limit")
+        
+        pre_break_acc = s["acceleration"][:max(1, t_star)]
+        acc_danger = np.mean(pre_break_acc) + 3 * np.std(pre_break_acc)
+        
+        pre_break_ent = s["entropy"][:max(1, t_star)]
+        ent_danger = np.mean(pre_break_ent) + 3 * np.std(pre_break_ent)
+        self.ax3.axhline(y=ent_danger, color='red', linestyle=':', alpha=0.5, label="Chaos Limit")
+        
+        pre_break_coh = s["coherence"][:max(1, t_star)]
+        coh_danger = np.mean(pre_break_coh) - 2 * np.std(pre_break_coh)
+
         self.ax1.set_title(f"Dynamic Systemic Tau: {s['target_col']}")
+        self.ax1.legend(loc="upper left")
         
         # Ax2: Raw Data & Acceleration
         self.ax2.plot(time_index, s["data"], color="#7f7f7f", linewidth=1.5, alpha=0.5, label="Raw Data")
@@ -520,11 +617,22 @@ class SystemicTauApp(BaseApp):
                 return f"{val:.6f}"
             return f"{val:,.2f}"
 
-        self.lbl_tau.configure(text=fmt(s['tau_val']))
-        self.lbl_accel.configure(text=fmt(s['max_accel']))
-        self.lbl_entropy.configure(text=fmt(s['max_entropy']))
-        self.lbl_coherence.configure(text=f"{s['min_coherence']:.2f}")
+        # Traffic light colors
+        def get_color(val, threshold, lower_is_worse=False):
+            if np.isnan(val) or np.isnan(threshold):
+                return "#2ca02c"
+            if lower_is_worse:
+                return "#d62728" if val <= threshold else "#2ca02c"
+            else:
+                return "#d62728" if val >= threshold else "#2ca02c"
+
+        self.lbl_tau.configure(text=fmt(s['tau_val']), text_color=get_color(s['tau_val'], tau_danger))
+        self.lbl_accel.configure(text=fmt(s['max_accel']), text_color=get_color(s['max_accel'], acc_danger))
+        self.lbl_entropy.configure(text=fmt(s['max_entropy']), text_color=get_color(s['max_entropy'], ent_danger))
+        self.lbl_coherence.configure(text=f"{s['min_coherence']:.2f}", text_color=get_color(s['min_coherence'], coh_danger, True))
         self.lbl_tstar.configure(text=s['t_star_label'])
+        
+        self.animate_btn.configure(state="normal")
 
     def _generate_deterministic_report(self):
         s = self.math_stats
@@ -537,7 +645,14 @@ class SystemicTauApp(BaseApp):
             return f"{val:,.2f}"
         
         report = (
-            f"\n--- STRUCTURAL DIAGNOSIS REPORT ---\n"
+            f"\n=======================================\n"
+            f"EXECUTIVE SUMMARY:\n"
+            f"The system suffered a critical structural break at {t_star_label} due to "
+            f"uncontrollable entropic decay. The momentum peak of {fmt(s['max_accel'])} "
+            f"indicates a severe external shock precipitating the topological collapse.\n"
+            f"=======================================\n\n"
+            
+            f"--- STRUCTURAL DIAGNOSIS REPORT ---\n"
             f"1. TOPOLOGICAL REORGANIZATION (τ_s):\n"
             f"   A critical structural break (t*) was detected at date/index: [{t_star_label}].\n"
             f"   The magnitude of the anomaly (variance) for '{target_col}' reached a peak of {fmt(s['tau_val'])}.\n"
