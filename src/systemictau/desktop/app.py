@@ -137,17 +137,15 @@ class SystemicTauApp(BaseApp):
         self.advanced_btn.grid(row=14, column=0, padx=20, pady=20, sticky="s")
 
         # -------------------------------------
-        # MAIN FRAME
+        # MAIN FRAME (Scrollable to fit everything)
         # -------------------------------------
-        self.main_frame = ctk.CTkFrame(self, corner_radius=10, fg_color="transparent")
+        self.main_frame = ctk.CTkScrollableFrame(self, corner_radius=10, fg_color="transparent")
         self.main_frame.grid(row=0, column=1, padx=20, pady=20, sticky="nsew")
-        self.main_frame.grid_rowconfigure(1, weight=5) # Graph space
-        self.main_frame.grid_rowconfigure(2, weight=2) # Text/Metrics space
         self.main_frame.grid_columnconfigure(0, weight=1)
         
         # Top bar
         self.top_bar = ctk.CTkFrame(self.main_frame, fg_color="transparent")
-        self.top_bar.grid(row=0, column=0, sticky="ew", pady=(0, 10))
+        self.top_bar.pack(fill="x", pady=(0, 10))
         
         self.upload_btn = ctk.CTkButton(self.top_bar, text="Select CSV/Excel File", command=self.upload_file_dialog, height=40)
         self.upload_btn.pack(side="left", padx=(0, 10))
@@ -161,18 +159,44 @@ class SystemicTauApp(BaseApp):
         self.workspace_btn = ctk.CTkButton(self.top_bar, text="🪟 New Workspace", command=self.open_new_workspace, height=40, fg_color="transparent", border_width=1, text_color="gray80")
         self.workspace_btn.pack(side="right", padx=10)
         
-        # Middle: Graph Area (Tabs)
-        self.graph_frame = ctk.CTkFrame(self.main_frame, corner_radius=10)
-        self.graph_frame.grid(row=1, column=0, sticky="nsew", pady=10)
+        # -------------------------------------
+        # DASHBOARD FRAME (Always Visible)
+        # -------------------------------------
+        self.dashboard_frame = ctk.CTkFrame(self.main_frame, fg_color="transparent")
+        self.dashboard_frame.pack(fill="both", expand=True)
         
-        self.tabview = ctk.CTkTabview(self.graph_frame)
-        self.tabview.pack(fill="both", expand=True, padx=10, pady=(10, 0))
+        # 2.1 Main Verdict Box
+        self.verdict_box = ctk.CTkFrame(self.dashboard_frame, corner_radius=10, fg_color="#2b2b2b")
+        self.verdict_box.pack(fill="x", pady=(0, 10), ipady=15)
         
-        self.tab1 = self.tabview.add("Temporal Dynamics")
-        self.tab2 = self.tabview.add("Phase Space")
-        self.tab3 = self.tabview.add("Early Warning Signals")
+        self.lbl_verdict_title = ctk.CTkLabel(self.verdict_box, text="AWAITING ANALYSIS", font=ctk.CTkFont(size=20, weight="bold"), text_color="white")
+        self.lbl_verdict_title.pack(pady=(10, 5))
         
-        # Temporal Dynamics Tab (Fig 1)
+        self.lbl_verdict_desc = ctk.CTkLabel(self.verdict_box, text="Upload a dataset and run the analysis to view the systemic diagnosis.", font=ctk.CTkFont(size=14), text_color="white", wraplength=800)
+        self.lbl_verdict_desc.pack(pady=(0, 10))
+        
+        verdict_btns = ctk.CTkFrame(self.verdict_box, fg_color="transparent")
+        verdict_btns.pack()
+        self.explain_btn = ctk.CTkButton(verdict_btns, text="Explain Simply", command=self.explain_simply, fg_color="gray20", hover_color="gray30")
+        self.explain_btn.pack(side="left", padx=5)
+        self.export_btn = ctk.CTkButton(verdict_btns, text="Export Academic PDF", command=self.export_report)
+        self.export_btn.pack(side="left", padx=5)
+
+        # 2.2 Key Metrics Row
+        self.metrics_row = ctk.CTkFrame(self.dashboard_frame, fg_color="transparent")
+        self.metrics_row.pack(fill="x", pady=10)
+        self.metrics_row.grid_columnconfigure((0,1,2,3), weight=1)
+        
+        self.lbl_tstar = self._create_metric_card(self.metrics_row, "t* (Breakpoint)", 0, 0, tooltip_text="Structural breakpoint index")
+        self.lbl_tau = self._create_metric_card(self.metrics_row, "Max τ_s (Mass)", 0, 1, tooltip_text="Topological variance peak")
+        self.lbl_accel = self._create_metric_card(self.metrics_row, "Peak a_t (Momentum)", 0, 2, tooltip_text="Peak 2nd derivative")
+        self.lbl_coherence = self._create_metric_card(self.metrics_row, "Min C_s (Coupling)", 0, 3, tooltip_text="Desynchronization minimum")
+        self.lbl_entropy = ctk.CTkLabel(self.main_frame, text="") # Hidden but exists for compatibility
+        
+        # 2.3 Main Visualization (Fig 1)
+        self.main_chart_frame = ctk.CTkFrame(self.dashboard_frame, corner_radius=10)
+        self.main_chart_frame.pack(fill="both", expand=True, pady=10)
+        
         self.fig1 = Figure(figsize=(10, 5), dpi=100)
         self.ax1 = self.fig1.add_subplot(221)
         self.ax2 = self.fig1.add_subplot(222)
@@ -186,23 +210,58 @@ class SystemicTauApp(BaseApp):
         self.ax3.set_title("Entropic Decay (S_e)")
         self.ax4.set_title("Systemic Coherence (C_s)")
         
-        self.canvas1 = FigureCanvasTkAgg(self.fig1, master=self.tab1)
+        self.canvas1 = FigureCanvasTkAgg(self.fig1, master=self.main_chart_frame)
         self.canvas1.draw()
-        self.canvas1.get_tk_widget().pack(fill="both", expand=True)
-        
-        self.toolbar1 = NavigationToolbar2Tk(self.canvas1, self.tab1)
+        self.canvas1.get_tk_widget().pack(fill="both", expand=True, padx=5, pady=5)
+        self.toolbar1 = NavigationToolbar2Tk(self.canvas1, self.main_chart_frame)
         self.toolbar1.update()
         self.toolbar1.pack(side="bottom", fill="x")
+
+        # 2.4 Bottom Section (Split View)
+        self.bottom_split = ctk.CTkFrame(self.dashboard_frame, fg_color="transparent")
+        self.bottom_split.pack(fill="x", pady=10)
+        self.bottom_split.grid_columnconfigure(0, weight=2)
+        self.bottom_split.grid_columnconfigure(1, weight=1)
+        
+        # Left Panel - Key Insights
+        self.insights_frame = ctk.CTkFrame(self.bottom_split, corner_radius=10)
+        self.insights_frame.grid(row=0, column=0, sticky="nsew", padx=(0, 10))
+        ctk.CTkLabel(self.insights_frame, text="KEY INSIGHTS", font=ctk.CTkFont(size=14, weight="bold")).pack(anchor="w", padx=15, pady=(15, 5))
+        self.lbl_insights = ctk.CTkLabel(self.insights_frame, text="Run analysis to generate insights.", justify="left", anchor="w", wraplength=500)
+        self.lbl_insights.pack(anchor="w", padx=15, pady=(0, 15), fill="x")
+        
+        # Right Panel - Quick Actions
+        self.actions_frame = ctk.CTkFrame(self.bottom_split, corner_radius=10)
+        self.actions_frame.grid(row=0, column=1, sticky="nsew")
+        ctk.CTkLabel(self.actions_frame, text="QUICK ACTIONS", font=ctk.CTkFont(size=14, weight="bold")).pack(pady=(15, 5))
+        
+        ctk.CTkButton(self.actions_frame, text="Export Full Report", command=self.export_report, fg_color="gray30").pack(pady=5, padx=15, fill="x")
+        ctk.CTkButton(self.actions_frame, text="Save Analysis", command=self._show_coming_soon, fg_color="gray30").pack(pady=5, padx=15, fill="x")
+        ctk.CTkButton(self.actions_frame, text="Compare with File", command=self._show_coming_soon, fg_color="gray30").pack(pady=5, padx=15, fill="x")
+        
+        # Simple/Advanced Toggle
+        self.toggle_mode_btn = ctk.CTkButton(self.dashboard_frame, text="[Simple Mode ●]   [Advanced View]", command=self._toggle_dashboard_mode, fg_color="transparent", border_width=1, text_color=("gray10", "gray90"))
+        self.toggle_mode_btn.pack(pady=20)
+        self.is_advanced_mode = False
+
+        # -------------------------------------
+        # ADVANCED FRAME (Toggleable)
+        # -------------------------------------
+        self.advanced_frame = ctk.CTkFrame(self.main_frame, fg_color="transparent")
+        # Hidden by default
+        
+        self.tabview = ctk.CTkTabview(self.advanced_frame)
+        self.tabview.pack(fill="both", expand=True, pady=(0, 10))
+        self.tab2 = self.tabview.add("Phase Space")
+        self.tab3 = self.tabview.add("Early Warning Signals")
         
         # Phase Space Tab (Fig 2)
         self.fig2 = Figure(figsize=(10, 5), dpi=100)
         self.ax_ps = self.fig2.add_subplot(111)
         self.fig2.tight_layout(pad=3.0)
-        
         self.canvas2 = FigureCanvasTkAgg(self.fig2, master=self.tab2)
         self.canvas2.draw()
         self.canvas2.get_tk_widget().pack(fill="both", expand=True)
-        
         self.toolbar2 = NavigationToolbar2Tk(self.canvas2, self.tab2)
         self.toolbar2.update()
         self.toolbar2.pack(side="bottom", fill="x")
@@ -213,52 +272,32 @@ class SystemicTauApp(BaseApp):
         self.ax_ews2 = self.fig3.add_subplot(312)
         self.ax_ews3 = self.fig3.add_subplot(313)
         self.fig3.tight_layout(pad=1.5)
-        
         self.canvas3 = FigureCanvasTkAgg(self.fig3, master=self.tab3)
         self.canvas3.draw()
         self.canvas3.get_tk_widget().pack(fill="both", expand=True)
-        
         self.toolbar3 = NavigationToolbar2Tk(self.canvas3, self.tab3)
         self.toolbar3.update()
         self.toolbar3.pack(side="bottom", fill="x")
         
-        # Bottom: Metrics & AI Log
-        self.bottom_frame = ctk.CTkFrame(self.main_frame, fg_color="transparent")
-        self.bottom_frame.grid(row=2, column=0, sticky="nsew", pady=10)
-        self.bottom_frame.grid_rowconfigure(0, weight=1)
-        self.bottom_frame.grid_columnconfigure(0, weight=1) # Metrics
-        self.bottom_frame.grid_columnconfigure(1, weight=3) # Log
-        self.bottom_frame.grid_columnconfigure(2, weight=0) # Buttons
-        
-        # Math Metrics Panel
-        self.metrics_frame = ctk.CTkFrame(self.bottom_frame, fg_color="transparent")
-        self.metrics_frame.grid(row=0, column=0, sticky="nsew", padx=(0, 10))
-        
-        self.metrics_frame.grid_columnconfigure(0, weight=1)
-        self.metrics_frame.grid_columnconfigure(1, weight=1)
-        
-        ctk.CTkLabel(self.metrics_frame, text="TOPOLOGICAL METRICS", font=ctk.CTkFont(size=14, weight="bold")).grid(row=0, column=0, columnspan=2, pady=(0, 10))
-        
-        self.lbl_tstar = self._create_metric_card(self.metrics_frame, "t* (Structural Breakpoint)", 1, 0, colspan=2, val_color="#ff7f0e", val_size=24, tooltip_text="The exact time index where the system crossed its structural stability threshold.")
-        self.lbl_tau = self._create_metric_card(self.metrics_frame, "Max τ_s (Mass)", 2, 0, tooltip_text="Maximum variance magnitude. Represents the physical topological mass of the transition.")
-        self.lbl_accel = self._create_metric_card(self.metrics_frame, "Peak a_t (Momentum)", 2, 1, tooltip_text="Peak 2nd derivative. Indicates the absolute momentum forcing the structural collapse.")
-        self.lbl_entropy = self._create_metric_card(self.metrics_frame, "Max S_e (Chaos)", 3, 0, tooltip_text="Peak volatility proxy. Measures the internal thermodynamic chaos accumulated.")
-        self.lbl_coherence = self._create_metric_card(self.metrics_frame, "Min C_s (Coupling)", 3, 1, tooltip_text="Multidimensional eigenvalue minimum. Tracks the desynchronization of the system's components.")
-
-        # AI Epistemic Log
-        self.results_box = ctk.CTkTextbox(self.bottom_frame, font=ctk.CTkFont(family="Courier", size=12))
-        self.results_box.grid(row=0, column=1, sticky="nsew", padx=(0, 10))
-        self.results_box.insert("0.0", "Epistemic Engine Output Log...")
+        # AI Epistemic Log / Technical Report
+        self.results_box = ctk.CTkTextbox(self.advanced_frame, font=ctk.CTkFont(family="Courier", size=12), height=300)
+        self.results_box.pack(fill="x", pady=10)
+        self.results_box.insert("0.0", "Technical Report Log...")
         self.results_box.configure(state="disabled")
         
-        self.actions_frame = ctk.CTkFrame(self.bottom_frame, fg_color="transparent")
-        self.actions_frame.grid(row=0, column=2, sticky="n")
-        
-        self.explain_btn = ctk.CTkButton(self.actions_frame, text="Explain Simply", command=self.explain_simply)
-        self.explain_btn.pack(pady=10)
-        
-        self.export_btn = ctk.CTkButton(self.actions_frame, text="Export Academic PDF", command=self.export_report)
-        self.export_btn.pack(pady=10)
+    def _show_coming_soon(self):
+        import tkinter.messagebox
+        tkinter.messagebox.showinfo("Coming Soon", "This feature is currently under development and will be available in a future release.")
+
+    def _toggle_dashboard_mode(self):
+        if self.is_advanced_mode:
+            self.advanced_frame.pack_forget()
+            self.toggle_mode_btn.configure(text="[Simple Mode ●]   [Advanced View]")
+            self.is_advanced_mode = False
+        else:
+            self.advanced_frame.pack(fill="both", expand=True)
+            self.toggle_mode_btn.configure(text="[Simple Mode]   [Advanced View ●]")
+            self.is_advanced_mode = True
 
     def _create_metric_card(self, parent, title, row, col, colspan=1, val_color=None, val_size=16, tooltip_text=""):
         card = ctk.CTkFrame(parent, corner_radius=8, fg_color=("gray85", "gray20"))
@@ -889,6 +928,35 @@ class SystemicTauApp(BaseApp):
         self.lbl_entropy.configure(text=fmt(s['max_entropy']), text_color=get_color(s['max_entropy'], ent_danger))
         self.lbl_coherence.configure(text=f"{s['min_coherence']:.2f}", text_color=get_color(s['min_coherence'], coh_danger, True))
         self.lbl_tstar.configure(text=s['t_star_label'])
+        
+        # --- Update Verdict Box ---
+        if s['p_value'] >= 0.05:
+            verdict_color = "#2c5f2d" # Green
+            verdict_title = "SUB-CRITICAL STRESS (NO COLLAPSE)"
+            verdict_desc = f"The system showed elevated volatility at t*={s['t_star']}, but statistical analysis indicates no structural collapse occurred (p={s['p_value']:.2f}). The system remains resilient."
+        else:
+            verdict_color = "#9e1a1a" # Red
+            verdict_title = "CRITICAL STRUCTURAL COLLAPSE"
+            verdict_desc = f"The system crossed a critical topological threshold at t*={s['t_star']} (p={s['p_value']:.4f}). Immediate action is required."
+            
+        self.verdict_box.configure(fg_color=verdict_color)
+        self.lbl_verdict_title.configure(text=verdict_title)
+        self.lbl_verdict_desc.configure(text=verdict_desc)
+
+        # --- Update Key Insights ---
+        clean_sens = s['sensitivity_narrative']
+        clean_sens = clean_sens.replace("WARNING: ", "").replace("Conclusion: ", "\n• ").replace("ACTIONABLE INSIGHT: ", "\n• ").replace("IMPLICATION: ", "\n• ")
+        insights_text = "• " + clean_sens
+        
+        if s['precursor_signal'].startswith("WEAK") or s['precursor_signal'].startswith("NONE"):
+            insights_text += "\n• No significant early warning signals detected prior to the anomaly."
+        else:
+            try:
+                insights_text += f"\n• Early Warning Signals detected: {s['precursor_signal'].split('->')[1].strip()}"
+            except Exception:
+                pass
+                
+        self.lbl_insights.configure(text=insights_text)
         
         self.animate_btn.configure(state="normal")
 
