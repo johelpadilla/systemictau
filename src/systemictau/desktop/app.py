@@ -539,10 +539,10 @@ class SystemicTauApp(BaseApp):
                         precursor_signal = "MODERATE EWS (See Tab 'Early Warning Signals' for visual proof). Partial resilience loss -> " + " | ".join(sig_list)
                     elif pass_count == 1:
                         has_precursors = False
-                        precursor_signal = "WEAK EWS. Isolated anomaly (Mostly Noise, visually unconvincing) -> " + " | ".join(sig_list)
+                        precursor_signal = "WEAK EWS. The signal is mostly noise and visually unconvincing. Structural resilience remains intact."
                     else:
                         has_precursors = False
-                        precursor_signal = "NONE. Sudden Shock -> " + " | ".join(sig_list)
+                        precursor_signal = "NONE. The system showed absolutely no early warning signs of degradation."
             precursor_signal += f"\n     (Methodology: Evaluated via rolling monotonic regression slope over the exact W={window} periods immediately preceding t*=[{t_star_label}])."
                         
             # Final Analytical Verdict (Resolution Engine)
@@ -607,7 +607,7 @@ class SystemicTauApp(BaseApp):
                 if t_max - t_min > 20:
                     sensitivity_narrative = f"WARNING: Dual Time-Scales Detected (Std = {t_std:.1f} periods). The short-term anomaly at t={t_min} represents a localized micro-shock, while the long-term anomaly at t={t_max} represents a systemic macro-shift. IMPLICATION: The system's vulnerability is horizon-dependent; it reacts differently depending on the speed of the stressor."
                 else:
-                    sensitivity_narrative = f"WARNING: High Parameter Sensitivity (Std = {t_std:.1f} periods). The transition is highly scale-dependent. Conclusion: This is not a well-defined point-in-time shock, but a prolonged structural degradation process. IMPLICATION: Do not expect a single trigger event. Monitoring should focus on long-term systemic drifts rather than short-term shocks."
+                    sensitivity_narrative = f"WARNING: High Parameter Sensitivity (Std = {t_std:.1f} periods). The transition is highly scale-dependent. Conclusion: This is not a well-defined point-in-time shock, but a prolonged structural degradation process. ACTIONABLE INSIGHT: Cease monitoring for abrupt short-term triggers. Strategic focus must shift immediately to tracking long-term structural degradation over larger time horizons."
             else:
                 sensitivity_narrative = f"Highly Stable (Std = {t_std:.1f} periods). Breakpoint is robust to parameter changes, indicating a true, well-defined instantaneous shock."
             sensitivity_narrative += f"\n     *Note: W={window} was objectively selected because it maximizes the Signal-to-Noise Ratio (SNR = {snr:.2f}). Alternate windows dilute the signal with excessive noise."
@@ -895,7 +895,6 @@ class SystemicTauApp(BaseApp):
     def _generate_deterministic_report(self):
         s = self.math_stats
         t_star_label = s['t_star_label']
-        target_col = s['target_col']
         
         def fmt(val):
             if abs(val) < 1e-3 and val != 0:
@@ -912,7 +911,7 @@ class SystemicTauApp(BaseApp):
                 f"EXECUTIVE SUMMARY:\n"
                 f"The system exhibited a period of heightened volatility at {t_star_label}, but mathematical evaluation "
                 f"(p={s['p_value']:.2f}) confirms this was NOT a true structural collapse. The peak momentum of {fmt(s['max_accel'])} "
-                f"represents sub-critical stress or pure noise. No immediate systemic intervention is required.\n"
+                f"is mathematically consistent with random noise or sub-critical stress, but does not indicate structural collapse.\n"
             )
         else:
             exec_summary = (
@@ -929,29 +928,24 @@ class SystemicTauApp(BaseApp):
             
             f"--- STRUCTURAL DIAGNOSIS REPORT ---\n"
             f"1. TOPOLOGICAL REORGANIZATION (τ_s):\n"
-            f"   A critical structural break (t*) was detected at date/index: [{t_star_label}].\n"
-            f"   The magnitude of the anomaly (variance) for '{target_col}' reached a peak of {fmt(s['tau_val'])}.\n"
-            f"   What does this mean? This is the exact moment the system crossed its physical stability threshold.\n\n"
+            f"   Breakpoint Detected: [{t_star_label}] (Variance anomaly peak: {fmt(s['tau_val'])}).\n"
+            f"   Significance: Marks the precise temporal coordinate where the system's topological stability fractured.\n\n"
             
             f"   [WINDOW OPTIMIZATION (Systemic Memory)]\n"
-            f"   The calculation was performed using a systemic memory of {s['window']} intervals.\n"
-            f"   Why this number? Because it yields a Signal-to-Noise Ratio (SNR) of {fmt(s['snr'])}.\n"
-            f"   This means the detected anomaly peak is {fmt(s['snr'])} times larger than the system's normal background noise.\n"
-            f"   Mathematically, this is the perfect window to isolate the collapse without blurring it with other data.\n\n"
+            f"   Analyzed with W={s['window']} to maximize Signal-to-Noise Ratio (SNR = {fmt(s['snr'])}).\n"
+            f"   Significance: This memory span strictly isolates the core transition geometry from background volatility.\n\n"
             
             f"2. ACCELERATION MOMENTUM (a_t):\n"
-            f"   The acceleration (second derivative) reached a peak of {fmt(s['max_accel'])}.\n"
-            f"   What does this mean? There was an extreme external momentum in the data that precipitated the systemic collapse.\n\n"
+            f"   Peak Momentum: {fmt(s['max_accel'])}.\n"
+            f"   Significance: Quantifies the sheer mathematical force propelling the system out of equilibrium.\n\n"
             
             f"3. ENTROPIC DECAY (S_e):\n"
-            f"   The maximum volatility (Entropy) was {fmt(s['max_entropy'])}.\n"
-            f"   What does this mean? Prior to the breaking point, the internal chaos of the system accumulated uncontrollably,\n"
-            f"   forcing the system to reorganize itself in order to survive.\n\n"
+            f"   Maximum Chaos: {fmt(s['max_entropy'])}.\n"
+            f"   Significance: Internal thermodynamic chaos accumulated, actively destabilizing historical constraints.\n\n"
             
             f"4. SYSTEMIC COHERENCE (C_s):\n"
-            f"   The systemic coherence dropped to a minimum of {fmt(s['min_coherence'])}.\n"
-            f"   What does this mean? A drop in Multidimensional Eigenvalues mathematically proves that\n"
-            f"   the system's variables disconnected or desynchronized from each other during the collapse.\n\n"
+            f"   Coherence Minimum: {fmt(s['min_coherence'])}.\n"
+            f"   Significance: Variables desynchronized and lost mutual coupling, signaling a breakdown in global coordination.\n\n"
             
             f"5. ROBUSTNESS & STATISTICAL VALIDATION:\n"
             f"   - Null Model (Monte Carlo): {s['n_perm']} unrestricted random surrogates evaluated.\n"
