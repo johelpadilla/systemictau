@@ -534,9 +534,12 @@ class SystemicTauApp(BaseApp):
                     if pass_count == 3:
                         has_precursors = True
                         precursor_signal = "STRONG EWS. Broad systemic degradation -> " + " | ".join(sig_list)
-                    elif pass_count > 0:
-                        has_precursors = False # Too weak to trigger global endogenous alarm
-                        precursor_signal = "PARTIAL EWS. Mixed signals of resilience loss -> " + " | ".join(sig_list)
+                    elif pass_count == 2:
+                        has_precursors = False
+                        precursor_signal = "MODERATE EWS. Partial resilience loss -> " + " | ".join(sig_list)
+                    elif pass_count == 1:
+                        has_precursors = False
+                        precursor_signal = "WEAK EWS. Isolated anomaly (Mostly Noise) -> " + " | ".join(sig_list)
                     else:
                         has_precursors = False
                         precursor_signal = "NONE. Sudden Shock -> " + " | ".join(sig_list)
@@ -602,9 +605,9 @@ class SystemicTauApp(BaseApp):
                 t_min = np.min(t_star_arr)
                 t_max = np.max(t_star_arr)
                 if t_max - t_min > 20:
-                    sensitivity_narrative = f"WARNING: Dual Time-Scales Detected (Std = {t_std:.1f} periods). The short-term anomaly at t={t_min} represents a localized micro-shock, while the long-term anomaly at t={t_max} represents a systemic macro-shift. Interpretation: The system's vulnerability is horizon-dependent; it reacts differently depending on the speed of the stressor."
+                    sensitivity_narrative = f"WARNING: Dual Time-Scales Detected (Std = {t_std:.1f} periods). The short-term anomaly at t={t_min} represents a localized micro-shock, while the long-term anomaly at t={t_max} represents a systemic macro-shift. IMPLICATION: The system's vulnerability is horizon-dependent; it reacts differently depending on the speed of the stressor."
                 else:
-                    sensitivity_narrative = f"WARNING: High Parameter Sensitivity (Std = {t_std:.1f} periods). The transition is highly scale-dependent. Conclusion: This is not a well-defined point-in-time shock, but a prolonged structural degradation process."
+                    sensitivity_narrative = f"WARNING: High Parameter Sensitivity (Std = {t_std:.1f} periods). The transition is highly scale-dependent. Conclusion: This is not a well-defined point-in-time shock, but a prolonged structural degradation process. IMPLICATION: Do not expect a single trigger event. Monitoring should focus on long-term systemic drifts rather than short-term shocks."
             else:
                 sensitivity_narrative = f"Highly Stable (Std = {t_std:.1f} periods). Breakpoint is robust to parameter changes, indicating a true, well-defined instantaneous shock."
             sensitivity_narrative += f"\n     *Note: W={window} was objectively selected because it maximizes the Signal-to-Noise Ratio (SNR = {snr:.2f}). Alternate windows dilute the signal with excessive noise."
