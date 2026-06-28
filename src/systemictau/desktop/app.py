@@ -236,8 +236,8 @@ class SystemicTauApp(BaseApp):
         ctk.CTkLabel(self.actions_frame, text="QUICK ACTIONS", font=ctk.CTkFont(size=14, weight="bold")).pack(pady=(15, 5))
         
         ctk.CTkButton(self.actions_frame, text="Export Full Report", command=self.export_report, fg_color="gray30").pack(pady=5, padx=15, fill="x")
-        ctk.CTkButton(self.actions_frame, text="Save Analysis", command=self._show_coming_soon, fg_color="gray30").pack(pady=5, padx=15, fill="x")
-        ctk.CTkButton(self.actions_frame, text="Compare with File", command=self._show_coming_soon, fg_color="gray30").pack(pady=5, padx=15, fill="x")
+        ctk.CTkButton(self.actions_frame, text="Save Analysis", command=self._save_analysis, fg_color="gray30").pack(pady=5, padx=15, fill="x")
+        ctk.CTkButton(self.actions_frame, text="Compare with File", command=self._compare_with_file, fg_color="gray30").pack(pady=5, padx=15, fill="x")
         
         # Simple/Advanced Toggle
         self.toggle_mode_btn = ctk.CTkButton(self.dashboard_frame, text="[Simple Mode ●]   [Advanced View]", command=self._toggle_dashboard_mode, fg_color="transparent", border_width=1, text_color=("gray10", "gray90"))
@@ -289,6 +289,172 @@ class SystemicTauApp(BaseApp):
         import tkinter.messagebox
         tkinter.messagebox.showinfo("Coming Soon", "This feature is currently under development and will be available in a future release.")
 
+    def _save_analysis(self):
+        import tkinter.messagebox
+        if not hasattr(self, 'math_stats') or not self.math_stats:
+            tkinter.messagebox.showwarning("Save Error", "No analysis to save. Please run an analysis first.")
+            return
+            
+        save_path = filedialog.asksaveasfilename(defaultextension=".stau", filetypes=[("Systemic Tau Bundle", "*.stau")])
+        if not save_path:
+            return
+            
+        bundle = {
+            'df': self.df,
+            'math_stats': self.math_stats,
+            'full_log': getattr(self, 'full_log', ''),
+            'target_col': getattr(self, 'target_col', self.target_menu.get()),
+            'time_col': getattr(self, 'time_col', None)
+        }
+        
+        import pickle
+        try:
+            with open(save_path, 'wb') as f:
+                pickle.dump(bundle, f)
+            tkinter.messagebox.showinfo("Success", f"Analysis saved to {os.path.basename(save_path)}")
+        except Exception as e:
+            tkinter.messagebox.showerror("Error", f"Could not save file: {e}")
+
+    def _compare_with_file(self):
+        import tkinter.messagebox
+        if not hasattr(self, 'math_stats') or not self.math_stats:
+            tkinter.messagebox.showwarning("Compare Error", "Please run an analysis on the current file first before comparing.")
+            return
+            
+        file_path = filedialog.askopenfilename(filetypes=[("Data/Analysis Files", "*.csv *.xlsx *.stau")])
+        if not file_path:
+            return
+            
+        import threading
+        
+        def _run_comparison():
+            try:
+                if file_path.endswith('.stau'):
+                    import pickle
+                    with open(file_path, 'rb') as f:
+                        bundle = pickle.load(f)
+                    df2 = bundle['df']
+                    stats2 = bundle['math_stats']
+                    target2 = bundle.get('target_col', 'Unknown')
+                else:
+                    if file_path.endswith('.csv'):
+                        df2 = pd.read_csv(file_path)
+                    else:
+                        df2 = pd.read_excel(file_path)
+                        
+                    numeric_cols = df2.select_dtypes(include='number').columns.tolist()
+                    if not numeric_cols:
+                        raise ValueError("No numeric columns found in the second file.")
+                    target2 = numeric_cols[0]
+                    
+                    from systemictau.core import SystemicTauValidator
+                    validator = SystemicTauValidator(df2, target2)
+                    tau_val, p_value, effect_size, s_matrix = validator.validate(n_perm=100)
+                    
+                    window = validator.params.get('window', 20)
+                    # We compute tau array manually as in analyze_data
+                    from systemictau.core import network_coherence
+                    from systemictau.fractal import higuchi_fd
+                    
+                    data_vals = df2[target2].values
+                    n = len(data_vals)
+                    tau_array = np.zeros(n)
+                    accel = np.zeros(n)
+                    coherence = np.zeros(n)
+                    for i in range(window, n):
+                        seg = data_vals[i-window:i]
+                        v = np.var(seg)
+                        fd = higuchi_fd(seg)
+                        tau_array[i] = v * (1 + fd)
+                        if i > window + 1:
+                            accel[i] = (tau_array[i] - 2*tau_array[i-1] + tau_array[i-2])
+                        coherence[i] = network_coherence(seg)
+                    
+                    t_star = np.argmax(tau_array)
+                    
+                    stats2 = {
+                        "data": data_vals,
+                        "tau_array": tau_array,
+                        "t_star": t_star,
+                        "tau_val": tau_val,
+                        "max_accel": np.nanmax(accel),
+                        "min_coherence": np.nanmin(coherence),
+                        "p_value": p_value
+                    }
+                
+                self.after(0, lambda: self._show_compare_window(target2, stats2))
+            except Exception as e:
+                self.after(0, lambda err=e: tkinter.messagebox.showerror("Compare Error", f"Failed to compare:\n{err}"))
+                
+        self.results_box.configure(state="normal")
+        self.results_box.insert("end", f"\n[COMPARISON] Loading {os.path.basename(file_path)} and computing stats...\n")
+        self.results_box.configure(state="disabled")
+        threading.Thread(target=_run_comparison, daemon=True).start()
+
+    def _show_compare_window(self, target2, stats2):
+        comp_win = ctk.CTkToplevel(self)
+        comp_win.title("Comparison Results")
+        comp_win.geometry("900x700")
+        
+        # Plot
+        from matplotlib.figure import Figure
+        from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+        
+        fig = Figure(figsize=(8, 4), dpi=100)
+        ax = fig.add_subplot(111)
+        
+        s1 = self.math_stats
+        ax.plot(s1["tau_array"], label=f"File 1 ({getattr(self, 'target_col', 'Current')})", color="blue")
+        ax.axvline(s1["t_star"], color="blue", linestyle="--", alpha=0.5)
+        
+        ax.plot(stats2["tau_array"], label=f"File 2 ({target2})", color="red")
+        ax.axvline(stats2["t_star"], color="red", linestyle="--", alpha=0.5)
+        
+        ax.set_title("Systemic Tau Comparison: τ_s(t)")
+        ax.set_xlabel("Time Step")
+        ax.set_ylabel("Topological Mass")
+        ax.legend()
+        fig.tight_layout()
+        
+        chart_frame = ctk.CTkFrame(comp_win)
+        chart_frame.pack(fill="both", expand=True, padx=20, pady=20)
+        
+        canvas = FigureCanvasTkAgg(fig, master=chart_frame)
+        canvas.draw()
+        canvas.get_tk_widget().pack(fill="both", expand=True)
+        
+        toolbar = NavigationToolbar2Tk(canvas, chart_frame)
+        toolbar.update()
+        toolbar.pack(side="bottom", fill="x")
+        
+        # Table
+        table_frame = ctk.CTkFrame(comp_win)
+        table_frame.pack(fill="x", padx=20, pady=20)
+        
+        ctk.CTkLabel(table_frame, text="Metric", font=ctk.CTkFont(weight="bold")).grid(row=0, column=0, padx=10, pady=5)
+        ctk.CTkLabel(table_frame, text="File 1", font=ctk.CTkFont(weight="bold")).grid(row=0, column=1, padx=10, pady=5)
+        ctk.CTkLabel(table_frame, text="File 2", font=ctk.CTkFont(weight="bold")).grid(row=0, column=2, padx=10, pady=5)
+        
+        def fmt(v):
+            if isinstance(v, (int, float)):
+                if abs(v) < 1e-3 and v != 0:
+                    return f"{v:.6f}"
+                return f"{v:,.2f}"
+            return str(v)
+            
+        metrics = [
+            ("t* (Breakpoint)", s1.get('t_star_label', s1['t_star']), stats2.get('t_star_label', stats2['t_star'])),
+            ("Max τ_s", s1['tau_val'], stats2['tau_val']),
+            ("Peak a_t", s1['max_accel'], stats2['max_accel']),
+            ("Min C_s", s1['min_coherence'], stats2['min_coherence']),
+            ("p-value", s1['p_value'], stats2['p_value'])
+        ]
+        
+        for i, (name, v1, v2) in enumerate(metrics, start=1):
+            ctk.CTkLabel(table_frame, text=name).grid(row=i, column=0, padx=10, pady=5)
+            ctk.CTkLabel(table_frame, text=fmt(v1)).grid(row=i, column=1, padx=10, pady=5)
+            ctk.CTkLabel(table_frame, text=fmt(v2)).grid(row=i, column=2, padx=10, pady=5)
+
     def _toggle_dashboard_mode(self):
         if self.is_advanced_mode:
             self.advanced_frame.pack_forget()
@@ -334,7 +500,7 @@ class SystemicTauApp(BaseApp):
         self._load_file(file_path)
 
     def upload_file_dialog(self):
-        file_path = filedialog.askopenfilename(filetypes=[("Data Files", "*.csv *.xlsx")])
+        file_path = filedialog.askopenfilename(filetypes=[("Data & Analysis", "*.csv *.xlsx *.stau")])
         if file_path:
             self._load_file(file_path)
             
@@ -344,6 +510,34 @@ class SystemicTauApp(BaseApp):
         self.file_label.configure(text=f"Loaded: {filename}")
         
         try:
+            if file_path.endswith('.stau'):
+                import pickle
+                with open(file_path, 'rb') as f:
+                    bundle = pickle.load(f)
+                
+                self.df = bundle['df']
+                self.math_stats = bundle['math_stats']
+                self.full_log = bundle.get('full_log', '')
+                self.target_col = bundle.get('target_col', self.df.columns[0])
+                self.time_col = bundle.get('time_col', None)
+                
+                numeric_cols = self.df.select_dtypes(include='number').columns.tolist()
+                if len(numeric_cols) > 0:
+                    self.target_menu.configure(values=numeric_cols)
+                    self.target_menu.set(self.target_col)
+                    self.secondary_menu.configure(values=["[None]"] + numeric_cols)
+                    self.secondary_menu.set("[None]")
+                    self._redraw_preview(self.target_col)
+                    
+                self._update_results(self.full_log, clear=True)
+                
+                # Instantly populate dashboard
+                self.after(100, self._highlight_graph)
+                
+                import tkinter.messagebox
+                tkinter.messagebox.showinfo("Analysis Loaded", f"Successfully loaded analysis: {filename}")
+                return
+
             if file_path.endswith('.csv'):
                 self.df = pd.read_csv(file_path)
             else:
@@ -356,7 +550,6 @@ class SystemicTauApp(BaseApp):
                     self.time_col = col
                     break
             
-            # Fallback: if no date keyword is found, assume the first column is the time/index column
             if self.time_col is None and len(self.df.columns) > 0:
                 self.time_col = self.df.columns[0]
                 
