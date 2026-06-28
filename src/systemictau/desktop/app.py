@@ -249,7 +249,8 @@ class SystemicTauApp(BaseApp):
                 
             self.time_col = None
             for col in self.df.columns:
-                if str(col).lower() in ['date', 'time', 'fecha', 'timestamp']:
+                col_lower = str(col).lower().strip()
+                if any(x in col_lower for x in ['date', 'time', 'fecha', 'timestamp', 'year', 'año', 'month', 'mes', 'week', 'semana']):
                     self.time_col = col
                     break
                 
@@ -516,8 +517,8 @@ class SystemicTauApp(BaseApp):
         
         # Update metrics panel with cleaner formatting
         def fmt(val):
-            if abs(val) > 1e6 or (abs(val) < 1e-3 and val != 0):
-                return f"{val:.2e}"
+            if abs(val) < 1e-3 and val != 0:
+                return f"{val:.6f}"
             return f"{val:,.2f}"
 
         self.lbl_tau.configure(text=fmt(s['tau_val']))
@@ -531,30 +532,35 @@ class SystemicTauApp(BaseApp):
         t_star_label = s['t_star_label']
         target_col = s['target_col']
         
+        def fmt(val):
+            if abs(val) < 1e-3 and val != 0:
+                return f"{val:.6f}"
+            return f"{val:,.2f}"
+        
         report = (
             f"\n--- REPORTE DE DIAGNÓSTICO ESTRUCTURAL ---\n"
             f"1. REORGANIZACIÓN TOPOLÓGICA (τ_s):\n"
-            f"   Se detectó un quiebre estructural crítico (t*) en la secuencia: [{t_star_label}].\n"
-            f"   La magnitud de la anomalía (varianza) para '{target_col}' alcanzó un pico de {s['tau_val']:.2e}.\n"
+            f"   Se detectó un quiebre estructural crítico (t*) en la fecha/índice: [{t_star_label}].\n"
+            f"   La magnitud de la anomalía (varianza) para '{target_col}' alcanzó un pico de {fmt(s['tau_val'])}.\n"
             f"   ¿Qué significa esto? Es el momento exacto en que el sistema superó su límite de estabilidad física.\n\n"
             
             f"   [OPTIMIZACIÓN DE VENTANA (Systemic Memory)]\n"
             f"   El cálculo se realizó usando una memoria sistémica de {s['window']} intervalos.\n"
-            f"   ¿Por qué este número? Porque genera un 'Signal-to-Noise Ratio' (SNR) de {s['snr']:.2f}.\n"
-            f"   Es decir, el pico de anomalía detectado es {s['snr']:.2f} veces más grande que el ruido normal del sistema.\n"
+            f"   ¿Por qué este número? Porque genera un 'Signal-to-Noise Ratio' (SNR) de {fmt(s['snr'])}.\n"
+            f"   Es decir, el pico de anomalía detectado es {fmt(s['snr'])} veces más grande que el ruido normal del sistema.\n"
             f"   Matemáticamente, esta es la ventana perfecta para aislar el colapso sin difuminarlo con otros datos.\n\n"
             
             f"2. MOMENTUM DE ACELERACIÓN (a_t):\n"
-            f"   La aceleración (segunda derivada) alcanzó un pico de {s['max_accel']:.2e}.\n"
+            f"   La aceleración (segunda derivada) alcanzó un pico de {fmt(s['max_accel'])}.\n"
             f"   ¿Qué significa esto? Hubo un impulso externo extremo en los datos que precipitó el colapso sistémico.\n\n"
             
             f"3. CAÍDA ENTRÓPICA (S_e):\n"
-            f"   La volatilidad máxima (Entropía) fue de {s['max_entropy']:.2e}.\n"
+            f"   La volatilidad máxima (Entropía) fue de {fmt(s['max_entropy'])}.\n"
             f"   ¿Qué significa esto? Antes del punto de quiebre, el caos interno del sistema se acumuló de forma\n"
             f"   incontrolable, forzando al sistema a reorganizarse para poder sobrevivir.\n\n"
             
             f"4. COHERENCIA SISTÉMICA (C_s):\n"
-            f"   La coherencia sistémica cayó a un mínimo de {s['min_coherence']:.2f}.\n"
+            f"   La coherencia sistémica cayó a un mínimo de {fmt(s['min_coherence'])}.\n"
             f"   ¿Qué significa esto? Una caída en los Eigenvalores Multidimensionales prueba matemáticamente que\n"
             f"   las variables del sistema se desconectaron o desincronizaron entre sí durante el colapso.\n"
             f"---------------------------------------\n"
@@ -620,8 +626,8 @@ class SystemicTauApp(BaseApp):
                 
                 # Math Metrics
                 def fmt(val):
-                    if abs(val) > 1e6 or (abs(val) < 1e-3 and val != 0):
-                        return f"{val:.4e}"
+                    if abs(val) < 1e-3 and val != 0:
+                        return f"{val:.6f}"
                     return f"{val:,.2f}"
                 
                 pdf.set_font("Arial", 'B', 12)
