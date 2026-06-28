@@ -254,6 +254,10 @@ class SystemicTauApp(BaseApp):
                 if any(x in col_lower for x in ['date', 'time', 'fecha', 'timestamp', 'year', 'año', 'month', 'mes', 'week', 'semana']):
                     self.time_col = col
                     break
+            
+            # Fallback: if no date keyword is found, assume the first column is the time/index column
+            if self.time_col is None and len(self.df.columns) > 0:
+                self.time_col = self.df.columns[0]
                 
             numeric_cols = self.df.select_dtypes(include='number').columns.tolist()
             if len(numeric_cols) > 0:
