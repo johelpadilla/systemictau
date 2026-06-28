@@ -93,11 +93,6 @@ class SystemicTauApp(BaseApp):
         self.simple_mode_switch.grid(row=1, column=0, padx=20, pady=10)
         self.simple_mode_switch.select()
         
-        self.domain_label = ctk.CTkLabel(self.sidebar_frame, text="Data Domain:", anchor="w")
-        self.domain_label.grid(row=2, column=0, padx=20, pady=(20, 0))
-        self.domain_menu = ctk.CTkOptionMenu(self.sidebar_frame, values=["Epidemiology", "Finance", "Ecology", "General"])
-        self.domain_menu.grid(row=3, column=0, padx=20, pady=(10, 10))
-        
         # Target Variable Selection
         self.target_label = ctk.CTkLabel(self.sidebar_frame, text="Target Parameter (τ_s):", anchor="w")
         self.target_label.grid(row=4, column=0, padx=20, pady=(10, 0))
@@ -938,8 +933,7 @@ class SystemicTauApp(BaseApp):
                     self._update_results("      -> API Key missing. Requesting from user...\n")
                     self.after(0, self._prompt_for_api_key)
                     return
-
-                context = f"Domain: '{self.domain_menu.get()}'. {msg}."
+                context = f"{msg}."
                 
                 hypothesis, confidence = run_discovery_engine_sync(
                     context=context, 
