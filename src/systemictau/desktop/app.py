@@ -77,23 +77,27 @@ class SystemicTauApp(BaseApp):
         
         self.window_label = ctk.CTkLabel(self.sidebar_frame, text="Systemic Memory (Window):", anchor="w")
         self.window_label.grid(row=6, column=0, padx=20, pady=(10, 0))
+        
         self.window_slider = ctk.CTkSlider(self.sidebar_frame, from_=3, to=100, command=self._on_slider_change)
         self.window_slider.set(20)
-        self.window_slider.grid(row=7, column=0, padx=20, pady=(5, 10))
+        self.window_slider.grid(row=7, column=0, padx=20, pady=(5, 5))
+        
+        self.optimize_btn = ctk.CTkButton(self.sidebar_frame, text="⚡ Auto-Optimize Window", command=self.optimize_window, fg_color="#2ca02c", hover_color="#238023")
+        self.optimize_btn.grid(row=8, column=0, padx=20, pady=(0, 10))
         
         # AI Epistemic Engine Switch
         self.run_ai_switch = ctk.CTkSwitch(self.sidebar_frame, text="Enable AI Agents")
-        self.run_ai_switch.grid(row=8, column=0, padx=20, pady=(10, 20))
+        self.run_ai_switch.grid(row=9, column=0, padx=20, pady=(10, 20))
         # Default is off (0)
         
         if HAS_DND:
             self.dnd_label = ctk.CTkLabel(self.sidebar_frame, text="[Drag & Drop Active]", text_color="green", font=ctk.CTkFont(size=10))
-            self.dnd_label.grid(row=9, column=0, padx=20, pady=5)
+            self.dnd_label.grid(row=10, column=0, padx=20, pady=5)
             self.drop_target_register(DND_FILES)
             self.dnd_bind('<<Drop>>', self.handle_dnd)
             
         self.advanced_btn = ctk.CTkButton(self.sidebar_frame, text="Advanced Settings", state="disabled", command=self.open_advanced_settings)
-        self.advanced_btn.grid(row=10, column=0, padx=20, pady=20, sticky="s")
+        self.advanced_btn.grid(row=11, column=0, padx=20, pady=20, sticky="s")
 
         # -------------------------------------
         # MAIN FRAME
@@ -270,6 +274,54 @@ class SystemicTauApp(BaseApp):
         self.ax1.plot(self.df[col_name].values, color="#1f77b4")
         self.ax1.set_title(f"Preview: {col_name}")
         self.canvas1.draw()
+            
+    def optimize_window(self):
+        if not self.loaded_file_path or self.df is None:
+            self._update_results("Error: Please upload a valid data file first.\n", clear=True)
+            return
+            
+        self._update_results("\n[OPTIMIZER] Scanning for optimal Systemic Memory window...\n")
+        threading.Thread(target=self._run_optimization, daemon=True).start()
+        
+    def _run_optimization(self):
+        try:
+            numeric_df = self.df.select_dtypes(include='number').ffill().fillna(0)
+            if numeric_df.empty:
+                raise ValueError("No numeric columns found.")
+            target_col = self.target_menu.get()
+            if target_col not in numeric_df.columns:
+                raise ValueError("Invalid target column.")
+                
+            data = numeric_df[target_col].values
+            n = len(data)
+            max_w = min(100, max(10, n // 2))
+            
+            best_w = 3
+            best_score = -np.inf
+            
+            for w in range(3, max_w + 1):
+                tau_series = pd.Series(data).rolling(window=w, min_periods=1).var().fillna(0).values
+                if len(tau_series) == 0: 
+                    continue
+                tau_max = np.max(tau_series)
+                tau_median = np.median(tau_series)
+                
+                # Signal-to-noise ratio
+                if tau_median > 0:
+                    score = tau_max / tau_median
+                else:
+                    score = tau_max
+                    
+                if score > best_score:
+                    best_score = score
+                    best_w = w
+                    
+            self.after(0, self.window_slider.set, best_w)
+            self._update_results(f"[OPTIMIZER] Found optimal window: {best_w} (SNR: {best_score:.2f})\n")
+            self.after(100, self.analyze_data)
+            
+        except Exception as e:
+            self._update_results(f"\n[ERROR] Optimization failed: {e}\n")
             
     def analyze_data(self):
         if not self.loaded_file_path or self.df is None:
