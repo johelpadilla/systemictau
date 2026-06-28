@@ -509,16 +509,17 @@ class SystemicTauApp(BaseApp):
                         precursor_signal = "YES. Signals detected -> " + " | ".join(sig_list)
                     else:
                         precursor_signal = "NO. Sudden Shock -> " + " | ".join(sig_list)
+            precursor_signal += "\n     (Methodology: Evaluated via rolling monotonic regression slope prior to t*)."
                         
             # Final Analytical Verdict (Resolution Engine)
             if p_value >= 0.05 and has_precursors:
-                final_verdict = "FALSE POSITIVE WITH ANTECEDENTS. While the system exhibited degrading resilience (precursors), the actual anomaly at t* does not exceed random topological noise. The collapse is mathematically a non-event, though the system was stressed."
+                final_verdict = "FALSE POSITIVE WITH ANTECEDENTS.\n     -> Finding: While the system exhibited degrading resilience (precursors), the final anomaly does not exceed random noise.\n     -> Practical Implication: The system absorbed a shock without topological failure, but resilience is dangerously low. A future perturbation could cause true collapse. Maintain preventive monitoring."
             elif p_value >= 0.05 and not has_precursors:
-                final_verdict = "PURE NOISE. No precursors, and the peak is statistically insignificant. Disregard this breakpoint."
+                final_verdict = "PURE NOISE.\n     -> Finding: No precursors, and the peak is statistically insignificant.\n     -> Practical Implication: The detected breakpoint is a mathematical artifact. Disregard."
             elif p_value < 0.05 and has_precursors:
-                final_verdict = "TRUE ENDOGENOUS COLLAPSE. The system degraded structurally from within (precursors) before suffering a mathematically significant topological break."
+                final_verdict = "TRUE ENDOGENOUS COLLAPSE.\n     -> Finding: The system degraded structurally from within (precursors) before suffering a significant break.\n     -> Practical Implication: The collapse was a predictable systemic failure, not just a random shock."
             else:
-                final_verdict = "TRUE EXOGENOUS SHOCK. The system suffered a mathematically significant break with zero prior warning, indicating a massive external driver."
+                final_verdict = "TRUE EXOGENOUS SHOCK.\n     -> Finding: A mathematically significant break with zero prior warning.\n     -> Practical Implication: The collapse was driven by a massive, unpredictable external driver (Black Swan event)."
             
             # 4. Uncertainty Bounds (FWHM & Relaxation)
             fwhms = []
@@ -567,10 +568,15 @@ class SystemicTauApp(BaseApp):
             t_star_arr = [x[1] for x in sensitivity_matrix]
             t_std = np.std(t_star_arr)
             if t_std > 3:
-                sensitivity_narrative = f"WARNING: High Parameter Sensitivity (Std = {t_std:.1f} periods). The transition is highly scale-dependent. At shorter memory windows, the math captures early micro-instabilities. At longer windows, it captures the delayed macro-collapse. Conclusion: This is not a well-defined point-in-time shock, but a prolonged structural degradation process."
+                t_min = np.min(t_star_arr)
+                t_max = np.max(t_star_arr)
+                if t_max - t_min > 20:
+                    sensitivity_narrative = f"WARNING: Dual Time-Scales Detected (Std = {t_std:.1f} periods). Short-memory windows isolate a micro-event near t*={t_min}, while long-memory windows isolate a macro-event near t*={t_max}. Conclusion: The system experienced sequential degradation across different temporal scales, rather than a single shock."
+                else:
+                    sensitivity_narrative = f"WARNING: High Parameter Sensitivity (Std = {t_std:.1f} periods). The transition is highly scale-dependent. Conclusion: This is not a well-defined point-in-time shock, but a prolonged structural degradation process."
             else:
                 sensitivity_narrative = f"Highly Stable (Std = {t_std:.1f} periods). Breakpoint is robust to parameter changes, indicating a true, well-defined instantaneous shock."
-            sensitivity_narrative += f"\n   *Note: Despite drift, W={window} was chosen deterministically because it mathematically maximizes the Signal-to-Noise Ratio (SNR)."
+            sensitivity_narrative += f"\n     *Note: Despite drift, W={window} was chosen deterministically because it mathematically maximizes the Signal-to-Noise Ratio (SNR)."
                 
             # Multivariate Synchrony
             multivariate_count = len(numeric_df.columns)
@@ -584,12 +590,20 @@ class SystemicTauApp(BaseApp):
                 min_r = np.nanmin(corr_matrix)
                 
                 sync_range = f"(Mean: {mean_r:.2f}, Min: {min_r:.2f}, Max: {max_r:.2f})"
+                
+                # Leading Driver Extraction
+                mean_corrs = np.nanmean(corr_matrix, axis=1)
+                leading_idx = np.nanargmax(mean_corrs)
+                leading_col = pre_collapse_df.columns[leading_idx]
+                leading_val = mean_corrs[leading_idx]
+                leading_str = f"Leading Driver Detected: '{leading_col}' exhibited the highest systemic coupling (r={leading_val:.2f}) prior to collapse."
+                
                 if mean_r > 0.6:
-                    multivariate_str = f"High System-wide Synchrony {sync_range}. Variables locked-in together prior to collapse."
+                    multivariate_str = f"High System-wide Synchrony {sync_range}. Variables locked-in together.\n     -> {leading_str}"
                 elif mean_r < 0.3:
-                    multivariate_str = f"Low Synchrony {sync_range}. The collapse was driven by isolated variables rather than global coordination."
+                    multivariate_str = f"Low Synchrony {sync_range}. Collapse driven by isolated variables.\n     -> {leading_str}"
                 else:
-                    multivariate_str = f"Moderate Synchrony {sync_range} across {multivariate_count} variables."
+                    multivariate_str = f"Moderate Synchrony {sync_range}.\n     -> {leading_str}"
             
             self.math_stats = {
                 "target_col": target_col,
