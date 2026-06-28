@@ -156,6 +156,9 @@ class SystemicTauApp(BaseApp):
         self.file_label = ctk.CTkLabel(self.top_bar, text="No file loaded.")
         self.file_label.pack(side="left", padx=20)
         
+        self.health_label = ctk.CTkLabel(self.top_bar, text="", font=ctk.CTkFont(weight="bold"))
+        self.health_label.pack(side="left", padx=10)
+        
         self.workspace_btn = ctk.CTkButton(self.top_bar, text="🪟 New Workspace", command=self.open_new_workspace, height=40, fg_color="transparent", border_width=1, text_color="gray80")
         self.workspace_btn.pack(side="right", padx=10)
         
@@ -571,6 +574,13 @@ class SystemicTauApp(BaseApp):
     def _redraw_preview(self, col_name):
         if self.df is None or col_name not in self.df.columns:
             return
+            
+        nans = self.df[col_name].isna().sum()
+        if nans > 0:
+            self.health_label.configure(text=f"⚠️ Status: {nans} Missing Values Detected!", text_color="#ff8c00")
+        else:
+            self.health_label.configure(text="✅ Status: Clean (0 missing)", text_color="#2ca02c")
+            
         self.ax1.clear()
         self.ax2.clear()
         self.ax2_twin.clear()
@@ -1181,6 +1191,9 @@ class SystemicTauApp(BaseApp):
                 f"uncontrollable entropic decay. The momentum peak of {fmt(s['max_accel'])} "
                 f"indicates a severe external shock precipitating the topological collapse.\n"
             )
+            
+        if getattr(self, 'data_was_cleaned', False):
+            exec_summary += f"\n[METHODOLOGICAL NOTE] Linear interpolation was applied to {self.data_was_cleaned} missing data points prior to topological computation to ensure continuous phase space reconstruction.\n"
             
         sens_narrative = s['sensitivity_narrative']
         if 'ACTIONABLE INSIGHT:' in sens_narrative:
