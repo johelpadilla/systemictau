@@ -350,6 +350,12 @@ class SystemicTauApp(BaseApp):
                         raise ValueError("No numeric columns found in the second file.")
                     target2 = numeric_cols[0]
                     
+                    # Fix: Handle NaNs in the comparison file to prevent validator crash
+                    nans = df2[target2].isna().sum()
+                    if nans > 0:
+                        df2[target2] = df2[target2].interpolate(method='linear').bfill().ffill()
+                        self.results_box.after(0, lambda: self._update_results(f"\\n[COMPARISON NOTE] Auto-interpolated {nans} missing values in {os.path.basename(file_path)}.\\n"))
+                    
                     from systemictau.core import SystemicTauValidator
                     validator = SystemicTauValidator(df2, target2)
                     tau_val, p_value, effect_size, s_matrix = validator.validate(n_perm=100)
