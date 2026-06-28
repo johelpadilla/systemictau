@@ -154,19 +154,7 @@ class SystemicTauApp(BaseApp):
         self.lbl_entropy = self._create_metric_card(self.metrics_frame, "Max S_e (Chaos)", 3, 0)
         self.lbl_coherence = self._create_metric_card(self.metrics_frame, "Min C_s (Coupling)", 3, 1)
 
-    def _create_metric_card(self, parent, title, row, col, colspan=1, val_color=None, val_size=16):
-        card = ctk.CTkFrame(parent, corner_radius=8, fg_color=("gray85", "gray20"))
-        card.grid(row=row, column=col, columnspan=colspan, padx=5, pady=5, sticky="nsew")
-        card.grid_columnconfigure(0, weight=1)
-        
-        lbl_title = ctk.CTkLabel(card, text=title, font=ctk.CTkFont(size=11, weight="bold"), text_color="gray50")
-        lbl_title.grid(row=0, column=0, pady=(5, 0))
-        
-        lbl_value = ctk.CTkLabel(card, text="--", font=ctk.CTkFont(size=val_size, weight="bold"), text_color=val_color)
-        lbl_value.grid(row=1, column=0, pady=(0, 5))
-        return lbl_value
-        
-    def toggle_mode(self):
+        # AI Epistemic Log
         self.results_box = ctk.CTkTextbox(self.bottom_frame, font=ctk.CTkFont(family="Courier", size=12))
         self.results_box.grid(row=0, column=1, sticky="nsew", padx=(0, 10))
         self.results_box.insert("0.0", "Epistemic Engine Output Log...")
@@ -180,6 +168,18 @@ class SystemicTauApp(BaseApp):
         
         self.export_btn = ctk.CTkButton(self.actions_frame, text="Export Academic PDF", command=self.export_report)
         self.export_btn.pack(pady=10)
+
+    def _create_metric_card(self, parent, title, row, col, colspan=1, val_color=None, val_size=16):
+        card = ctk.CTkFrame(parent, corner_radius=8, fg_color=("gray85", "gray20"))
+        card.grid(row=row, column=col, columnspan=colspan, padx=5, pady=5, sticky="nsew")
+        card.grid_columnconfigure(0, weight=1)
+        
+        lbl_title = ctk.CTkLabel(card, text=title, font=ctk.CTkFont(size=11, weight="bold"), text_color="gray50")
+        lbl_title.grid(row=0, column=0, pady=(5, 0))
+        
+        lbl_value = ctk.CTkLabel(card, text="--", font=ctk.CTkFont(size=val_size, weight="bold"), text_color=val_color)
+        lbl_value.grid(row=1, column=0, pady=(0, 5))
+        return lbl_value
 
     def toggle_mode(self):
         if self.simple_mode_switch.get() == 1:
