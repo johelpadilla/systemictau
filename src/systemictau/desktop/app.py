@@ -928,12 +928,25 @@ class SystemicTauApp(BaseApp):
             f"=======================================\n\n"
             
             f"--- STRUCTURAL DIAGNOSIS REPORT ---\n"
-            f"[SYSTEM DYNAMICS PROFILES]\n"
-            f" - Topological Reorganization (τ_s): Breakpoint at [{t_star_label}] (Peak Variance: {fmt(s['tau_val'])})\n"
-            f" - Acceleration Momentum (a_t): Peak = {fmt(s['max_accel'])}\n"
-            f" - Entropic Decay (S_e): Max Volatility = {fmt(s['max_entropy'])}\n"
-            f" - Systemic Coherence (C_s): Min Coupling = {fmt(s['min_coherence'])}\n"
-            f" - Analytical Memory (W): {s['window']} periods (Optimized for SNR = {fmt(s['snr'])})\n\n"
+            f"1. TOPOLOGICAL REORGANIZATION (τ_s):\n"
+            f"   Breakpoint Detected: [{t_star_label}] (Variance anomaly peak: {fmt(s['tau_val'])}).\n"
+            f"   Significance: Marks the precise temporal coordinate where the system's topological stability fractured.\n\n"
+            
+            f"   [WINDOW OPTIMIZATION (Systemic Memory)]\n"
+            f"   Analyzed with W={s['window']} to maximize Signal-to-Noise Ratio (SNR = {fmt(s['snr'])}).\n"
+            f"   Significance: This memory span strictly isolates the core transition geometry from background volatility.\n\n"
+            
+            f"2. ACCELERATION MOMENTUM (a_t):\n"
+            f"   Peak Momentum: {fmt(s['max_accel'])}.\n"
+            f"   Significance: Quantifies the external force that destabilized the system's equilibrium.\n\n"
+            
+            f"3. ENTROPIC DECAY (S_e):\n"
+            f"   Maximum Chaos: {fmt(s['max_entropy'])}.\n"
+            f"   Significance: Measures the accumulation of internal volatility and loss of system constraints.\n\n"
+            
+            f"4. SYSTEMIC COHERENCE (C_s):\n"
+            f"   Coherence Minimum: {fmt(s['min_coherence'])}.\n"
+            f"   Significance: Indicates structural desynchronization; variables lost mutual coupling during the anomaly.\n\n"
             
             f"5. ROBUSTNESS & STATISTICAL VALIDATION:\n"
             f"   - Null Model (Monte Carlo): {s['n_perm']} unrestricted random surrogates evaluated.\n"
