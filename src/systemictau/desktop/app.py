@@ -140,22 +140,33 @@ class SystemicTauApp(BaseApp):
         self.bottom_frame.grid_columnconfigure(2, weight=0) # Buttons
         
         # Math Metrics Panel
-        self.metrics_frame = ctk.CTkFrame(self.bottom_frame)
+        self.metrics_frame = ctk.CTkFrame(self.bottom_frame, fg_color="transparent")
         self.metrics_frame.grid(row=0, column=0, sticky="nsew", padx=(0, 10))
         
-        ctk.CTkLabel(self.metrics_frame, text="HARD METRICS", font=ctk.CTkFont(weight="bold")).pack(pady=5)
-        self.lbl_tau = ctk.CTkLabel(self.metrics_frame, text="Max τ_s: --")
-        self.lbl_tau.pack(anchor="w", padx=10, pady=2)
-        self.lbl_accel = ctk.CTkLabel(self.metrics_frame, text="Peak Accel: --")
-        self.lbl_accel.pack(anchor="w", padx=10, pady=2)
-        self.lbl_entropy = ctk.CTkLabel(self.metrics_frame, text="Max S_e: --")
-        self.lbl_entropy.pack(anchor="w", padx=10, pady=2)
-        self.lbl_coherence = ctk.CTkLabel(self.metrics_frame, text="Min C_s: --")
-        self.lbl_coherence.pack(anchor="w", padx=10, pady=2)
-        self.lbl_tstar = ctk.CTkLabel(self.metrics_frame, text="t* Index: --", text_color="#ff7f0e", font=ctk.CTkFont(weight="bold"))
-        self.lbl_tstar.pack(anchor="w", padx=10, pady=2)
+        self.metrics_frame.grid_columnconfigure(0, weight=1)
+        self.metrics_frame.grid_columnconfigure(1, weight=1)
+        
+        ctk.CTkLabel(self.metrics_frame, text="TOPOLOGICAL METRICS", font=ctk.CTkFont(size=14, weight="bold")).grid(row=0, column=0, columnspan=2, pady=(0, 10))
+        
+        self.lbl_tstar = self._create_metric_card(self.metrics_frame, "t* (Structural Breakpoint)", 1, 0, colspan=2, val_color="#ff7f0e", val_size=24)
+        self.lbl_tau = self._create_metric_card(self.metrics_frame, "Max τ_s (Mass)", 2, 0)
+        self.lbl_accel = self._create_metric_card(self.metrics_frame, "Peak a_t (Momentum)", 2, 1)
+        self.lbl_entropy = self._create_metric_card(self.metrics_frame, "Max S_e (Chaos)", 3, 0)
+        self.lbl_coherence = self._create_metric_card(self.metrics_frame, "Min C_s (Coupling)", 3, 1)
 
-        # AI Epistemic Log
+    def _create_metric_card(self, parent, title, row, col, colspan=1, val_color=None, val_size=16):
+        card = ctk.CTkFrame(parent, corner_radius=8, fg_color=("gray85", "gray20"))
+        card.grid(row=row, column=col, columnspan=colspan, padx=5, pady=5, sticky="nsew")
+        card.grid_columnconfigure(0, weight=1)
+        
+        lbl_title = ctk.CTkLabel(card, text=title, font=ctk.CTkFont(size=11, weight="bold"), text_color="gray50")
+        lbl_title.grid(row=0, column=0, pady=(5, 0))
+        
+        lbl_value = ctk.CTkLabel(card, text="--", font=ctk.CTkFont(size=val_size, weight="bold"), text_color=val_color)
+        lbl_value.grid(row=1, column=0, pady=(0, 5))
+        return lbl_value
+        
+    def toggle_mode(self):
         self.results_box = ctk.CTkTextbox(self.bottom_frame, font=ctk.CTkFont(family="Courier", size=12))
         self.results_box.grid(row=0, column=1, sticky="nsew", padx=(0, 10))
         self.results_box.insert("0.0", "Epistemic Engine Output Log...")
@@ -349,12 +360,17 @@ class SystemicTauApp(BaseApp):
         self.fig.tight_layout(pad=3.0)
         self.canvas.draw()
         
-        # Update metrics panel
-        self.lbl_tau.configure(text=f"Max τ_s: {s['tau_val']:.2e}")
-        self.lbl_accel.configure(text=f"Peak Accel: {s['max_accel']:.2e}")
-        self.lbl_entropy.configure(text=f"Max S_e: {s['max_entropy']:.2e}")
-        self.lbl_coherence.configure(text=f"Min C_s: {s['min_coherence']:.2f}")
-        self.lbl_tstar.configure(text=f"t* Index: {t_star}")
+        # Update metrics panel with cleaner formatting
+        def fmt(val):
+            if abs(val) > 1e6 or (abs(val) < 1e-3 and val != 0):
+                return f"{val:.2e}"
+            return f"{val:,.2f}"
+
+        self.lbl_tau.configure(text=fmt(s['tau_val']))
+        self.lbl_accel.configure(text=fmt(s['max_accel']))
+        self.lbl_entropy.configure(text=fmt(s['max_entropy']))
+        self.lbl_coherence.configure(text=f"{s['min_coherence']:.2f}")
+        self.lbl_tstar.configure(text=f"Index {t_star}")
 
     def _generate_deterministic_report(self):
         s = self.math_stats
@@ -440,14 +456,19 @@ class SystemicTauApp(BaseApp):
                 pdf.ln(5)
                 
                 # Math Metrics
+                def fmt(val):
+                    if abs(val) > 1e6 or (abs(val) < 1e-3 and val != 0):
+                        return f"{val:.4e}"
+                    return f"{val:,.2f}"
+                
                 pdf.set_font("Arial", 'B', 12)
                 pdf.cell(0, 8, "1. Topologic Reorganization Metrics", ln=True)
                 pdf.set_font("Courier", size=10)
                 if self.math_stats:
                     s = self.math_stats
-                    pdf.cell(0, 6, f"- Critical Mass Threshold (Max Tau_s): {s['tau_val']:.4e}", ln=True)
-                    pdf.cell(0, 6, f"- Peak Acceleration (a_t): {s['max_accel']:.4e}", ln=True)
-                    pdf.cell(0, 6, f"- Maximum Entropic Decay (S_e): {s['max_entropy']:.4e}", ln=True)
+                    pdf.cell(0, 6, f"- Critical Mass Threshold (Max Tau_s): {fmt(s['tau_val'])}", ln=True)
+                    pdf.cell(0, 6, f"- Peak Acceleration (a_t): {fmt(s['max_accel'])}", ln=True)
+                    pdf.cell(0, 6, f"- Maximum Entropic Decay (S_e): {fmt(s['max_entropy'])}", ln=True)
                     pdf.cell(0, 6, f"- Systemic Coherence Trough (C_s): {s['min_coherence']:.4f}", ln=True)
                     pdf.cell(0, 6, f"- Structural Breakpoint (t*): Index {s['t_star']}", ln=True)
                 pdf.ln(5)
