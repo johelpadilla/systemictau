@@ -681,6 +681,15 @@ class SystemicTauApp(BaseApp):
                 
             data = numeric_df[target_col].values
             
+            if hasattr(self, 'smoothing_menu'):
+                smooth_mode = self.smoothing_menu.get()
+                if smooth_mode == "Moving Average (n=3)":
+                    data = pd.Series(data).rolling(window=3, min_periods=1, center=True).mean().bfill().ffill().values
+                elif smooth_mode == "Savitzky-Golay (n=5)":
+                    from scipy.signal import savgol_filter
+                    if len(data) >= 5:
+                        data = savgol_filter(data, window_length=5, polyorder=2)
+            
             try:
                 window = int(self.window_slider.get())
             except Exception:
