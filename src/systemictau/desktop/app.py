@@ -451,6 +451,48 @@ class SystemicTauApp(BaseApp):
                 t_star_label = str(self.df[self.time_col].iloc[t_star])
             else:
                 t_star_label = f"Index {t_star}"
+                
+            # --- ROBUSTNESS & VALIDATION ENGINE ---
+            # 1. Sensitivity Analysis
+            w_minus = max(3, window - 2)
+            w_plus = min(len(data), window + 2)
+            tau_minus = pd.Series(data).rolling(window=w_minus, min_periods=1).var().fillna(0).values
+            tau_plus = pd.Series(data).rolling(window=w_plus, min_periods=1).var().fillna(0).values
+            t_star_minus = int(np.argmax(tau_minus)) if len(tau_minus) > 0 else t_star
+            t_star_plus = int(np.argmax(tau_plus)) if len(tau_plus) > 0 else t_star
+            t_star_range = max(abs(t_star - t_star_minus), abs(t_star - t_star_plus))
+            sensitivity_str = "Highly Stable" if t_star_range <= 2 else f"Moderate (Drifts by ~{t_star_range} periods)"
+            
+            # 2. Null Model Monte Carlo (p-value)
+            n_perm = 500
+            surrogate_taus = []
+            for _ in range(n_perm):
+                shuffled = np.random.permutation(data)
+                surr_tau = pd.Series(shuffled).rolling(window=window, min_periods=1).var().fillna(0).max()
+                surrogate_taus.append(surr_tau)
+            p_value = np.sum(np.array(surrogate_taus) >= tau_val) / n_perm
+            significance_str = "Statistically Significant" if p_value < 0.05 else "Indistinguishable from Random Noise"
+            
+            # 3. Transition Characterization
+            threshold_50 = tau_val * 0.5
+            pre_t_data = tau_series[:t_star]
+            above_50_idx = np.where(pre_t_data >= threshold_50)[0]
+            buildup_duration = t_star - above_50_idx[0] if len(above_50_idx) > 0 else 0
+            transition_speed = "Abrupt Flash Crash" if buildup_duration <= window else f"Gradual Degradation ({buildup_duration} periods)"
+            
+            post_t_data = tau_series[t_star+1:t_star+1+window]
+            if len(post_t_data) > 0:
+                recovery_mean = np.mean(post_t_data)
+                if recovery_mean < tau_val * 0.3:
+                    recovery_state = "System recovered stability"
+                elif recovery_mean > tau_val * 0.7:
+                    recovery_state = "System remains in chaotic state"
+                else:
+                    recovery_state = "System partially stabilized"
+            else:
+                recovery_state = "Insufficient data post-collapse"
+                
+            multivariate_count = len(numeric_df.columns)
             
             self.math_stats = {
                 "target_col": target_col,
@@ -467,7 +509,14 @@ class SystemicTauApp(BaseApp):
                 "t_star_label": t_star_label,
                 "tau_median": tau_median,
                 "snr": snr,
-                "window": window
+                "window": window,
+                "sensitivity_str": sensitivity_str,
+                "p_value": p_value,
+                "significance_str": significance_str,
+                "transition_speed": transition_speed,
+                "recovery_state": recovery_state,
+                "multivariate_count": multivariate_count,
+                "n_perm": n_perm
             }
             
             self.after(0, self._highlight_graph)
@@ -708,7 +757,15 @@ class SystemicTauApp(BaseApp):
             f"4. SYSTEMIC COHERENCE (C_s):\n"
             f"   The systemic coherence dropped to a minimum of {fmt(s['min_coherence'])}.\n"
             f"   What does this mean? A drop in Multidimensional Eigenvalues mathematically proves that\n"
-            f"   the system's variables disconnected or desynchronized from each other during the collapse.\n"
+            f"   the system's variables disconnected or desynchronized from each other during the collapse.\n\n"
+            
+            f"5. ROBUSTNESS & STATISTICAL VALIDATION:\n"
+            f"   - Null Model (Monte Carlo): {s['n_perm']} random surrogates evaluated.\n"
+            f"     Result: p-value = {s['p_value']:.4f} ({s['significance_str']}).\n"
+            f"   - Sensitivity Analysis (Window ±2): The structural break position (t*) is {s['sensitivity_str']}.\n"
+            f"   - Transition Speed: {s['transition_speed']}.\n"
+            f"   - Post-Transition: {s['recovery_state']}.\n"
+            f"   - Multivariate Synchrony: Evaluated jointly across {s['multivariate_count']} variables.\n"
             f"---------------------------------------\n"
         )
         self._update_results(report)
@@ -805,7 +862,7 @@ class SystemicTauApp(BaseApp):
                 pdf.set_font("Courier", size=9)
                 
                 # Sanitize the log text to remove greek and complex characters that crash fpdf
-                clean_log = self.full_log.replace('τ_s', 'Tau_s').replace('τ', 'Tau')
+                clean_log = self.full_log.replace('τ_s', 'Tau_s').replace('τ', 'Tau').replace('±', '+/-')
                 clean_log = clean_log.encode('ascii', 'ignore').decode('ascii')
                 pdf.multi_cell(0, 4, clean_log)
                 
