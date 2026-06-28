@@ -282,7 +282,7 @@ class SystemicTauApp(BaseApp):
 
     def _run_real_analysis_pipeline(self):
         try:
-            numeric_df = self.df.select_dtypes(include='number')
+            numeric_df = self.df.select_dtypes(include='number').ffill().fillna(0)
             if numeric_df.empty:
                 raise ValueError("No numeric columns found in data.")
                 
@@ -325,6 +325,7 @@ class SystemicTauApp(BaseApp):
                     std_dev = win_data.std(axis=0) + 1e-9
                     win_data_norm = (win_data - win_data.mean(axis=0)) / std_dev
                     corr_matrix = np.corrcoef(win_data_norm, rowvar=False)
+                    corr_matrix = np.nan_to_num(corr_matrix, nan=0.0, posinf=1.0, neginf=-1.0)
                     eigenvalues = np.linalg.eigvals(corr_matrix)
                     coherence[i-1] = np.max(eigenvalues).real / N
             else:
