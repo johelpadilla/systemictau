@@ -492,11 +492,11 @@ class SystemicTauApp(BaseApp):
                 surrogate_taus.append(surr_tau)
             p_value = np.sum(np.array(surrogate_taus) >= tau_val) / n_perm
             if p_value < 0.05:
-                significance_str = "Statistically Significant. Strong evidence of topological structural break."
+                significance_str = f"Statistically Significant. Strong evidence of topological structural break. The massive Effect Size ({effect_size:.2f} SD) confirms a true physical anomaly."
             elif p_value < 0.10:
-                significance_str = f"Marginally Significant. Implies a {p_value*100:.1f}% probability of a false positive under unrestricted shuffling. While a significant anomaly is present, it lacks strict 95% deterministic confidence, suggesting the presence of high background noise masking the true signal."
+                significance_str = f"Marginally Significant. Implies a {p_value*100:.1f}% probability of a false positive under unrestricted shuffling. While a significant anomaly is present (Effect Size = {effect_size:.2f} SD), it lacks strict 95% deterministic confidence, suggesting high background noise."
             else:
-                significance_str = f"Not Significant. Implies a {p_value*100:.1f}% false positive rate. Under the Null Hypothesis, this peak easily arises by chance, invalidating the structural break."
+                significance_str = f"Not Significant. Implies a {p_value*100:.1f}% false positive rate. Under the Null Hypothesis, this peak easily arises by chance, invalidating the structural break despite the apparent Effect Size ({effect_size:.2f} SD)."
             
             # 3. Early Warning Signals (Precursors) & Objective Transition Metrics
             precursor_signal = "None Detected. The system showed no early warning signals."
@@ -533,13 +533,13 @@ class SystemicTauApp(BaseApp):
                     
                     if pass_count == 3:
                         has_precursors = True
-                        precursor_signal = "STRONG EWS. Broad systemic degradation -> " + " | ".join(sig_list)
+                        precursor_signal = "STRONG EWS (See Tab 'Early Warning Signals' for visual proof). Broad systemic degradation -> " + " | ".join(sig_list)
                     elif pass_count == 2:
                         has_precursors = False
-                        precursor_signal = "MODERATE EWS. Partial resilience loss -> " + " | ".join(sig_list)
+                        precursor_signal = "MODERATE EWS (See Tab 'Early Warning Signals' for visual proof). Partial resilience loss -> " + " | ".join(sig_list)
                     elif pass_count == 1:
                         has_precursors = False
-                        precursor_signal = "WEAK EWS. Isolated anomaly (Mostly Noise) -> " + " | ".join(sig_list)
+                        precursor_signal = "WEAK EWS. Isolated anomaly (Mostly Noise, visually unconvincing) -> " + " | ".join(sig_list)
                     else:
                         has_precursors = False
                         precursor_signal = "NONE. Sudden Shock -> " + " | ".join(sig_list)
@@ -547,7 +547,7 @@ class SystemicTauApp(BaseApp):
                         
             # Final Analytical Verdict (Resolution Engine)
             if p_value >= 0.05 and pass_count > 0:
-                final_verdict = "SUB-CRITICAL STRESS (NO COLLAPSE).\n     -> Finding: The system exhibited some internal stress (precursors), but the final anomaly is mathematically indistinguishable from random noise (p>0.05). No structural collapse occurred.\n     -> Action: The system is resilient. Monitor the precursor metrics, but no immediate systemic intervention is required."
+                final_verdict = f"SUB-CRITICAL STRESS (NO COLLAPSE).\n     -> Finding: The system exhibited some internal stress (precursors), but the final anomaly is mathematically indistinguishable from random noise (p={p_value:.2f} >= 0.05). No structural collapse occurred.\n     -> Action: The system is resilient. Monitor the precursor metrics, but no immediate systemic intervention is required."
             elif p_value >= 0.05 and pass_count == 0:
                 final_verdict = "PURE NOISE.\n     -> Finding: No precursors, and the peak is statistically insignificant.\n     -> Action: No systemic intervention required. Resume normal operations."
             elif p_value < 0.05 and has_precursors:
@@ -633,11 +633,11 @@ class SystemicTauApp(BaseApp):
                 leading_str = f"Leading Driver Detected: '{leading_col}' exhibited the highest systemic coupling (r={leading_val:.2f}) prior to collapse."
                 
                 if mean_r > 0.6:
-                    multivariate_str = f"High System-wide Synchrony {sync_range}. Variables locked-in together.\n     -> {leading_str}"
+                    multivariate_str = f"High System-wide Synchrony {sync_range}. Variables locked-in together.\n     -> {leading_str}\n     -> Implication: A localized shock here will likely propagate globally."
                 elif mean_r < 0.3:
-                    multivariate_str = f"Low Synchrony {sync_range}. Collapse driven by isolated variables.\n     -> {leading_str}"
+                    multivariate_str = f"Low Synchrony {sync_range}. Collapse driven by isolated variables.\n     -> {leading_str}\n     -> Implication: Risk is localized. Interventions can be highly targeted."
                 else:
-                    multivariate_str = f"Moderate Synchrony {sync_range}.\n     -> {leading_str}"
+                    multivariate_str = f"Moderate Synchrony {sync_range}.\n     -> {leading_str}\n     -> Implication: Moderate contagion risk. Monitor the Leading Driver closely."
             
             self.math_stats = {
                 "target_col": target_col,
@@ -907,12 +907,24 @@ class SystemicTauApp(BaseApp):
             mark = "(*)" if w_test == s['window'] else "   "
             matrix_str += f"   {w_test:6d} | {t_test:15d} | {tau_test:,.2f} {mark}\n"
             
+        if s['p_value'] >= 0.05:
+            exec_summary = (
+                f"EXECUTIVE SUMMARY:\n"
+                f"The system exhibited a period of heightened volatility at {t_star_label}, but mathematical evaluation "
+                f"(p={s['p_value']:.2f}) confirms this was NOT a true structural collapse. The peak momentum of {fmt(s['max_accel'])} "
+                f"represents sub-critical stress or pure noise. No immediate systemic intervention is required.\n"
+            )
+        else:
+            exec_summary = (
+                f"EXECUTIVE SUMMARY:\n"
+                f"The system suffered a critical structural break at {t_star_label} due to "
+                f"uncontrollable entropic decay. The momentum peak of {fmt(s['max_accel'])} "
+                f"indicates a severe external shock precipitating the topological collapse.\n"
+            )
+            
         report = (
             f"\n=======================================\n"
-            f"EXECUTIVE SUMMARY:\n"
-            f"The system suffered a critical structural break at {t_star_label} due to "
-            f"uncontrollable entropic decay. The momentum peak of {fmt(s['max_accel'])} "
-            f"indicates a severe external shock precipitating the topological collapse.\n"
+            f"{exec_summary}"
             f"=======================================\n\n"
             
             f"--- STRUCTURAL DIAGNOSIS REPORT ---\n"
