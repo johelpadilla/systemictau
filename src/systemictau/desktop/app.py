@@ -11,7 +11,7 @@ try:
     from fpdf import FPDF
     import matplotlib
     matplotlib.use("TkAgg")
-    from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+    from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
     from matplotlib.figure import Figure
 except ImportError:
     pass
@@ -75,19 +75,25 @@ class SystemicTauApp(BaseApp):
         self.target_menu = ctk.CTkOptionMenu(self.sidebar_frame, values=["[Load File First]"], command=self._redraw_preview)
         self.target_menu.grid(row=5, column=0, padx=20, pady=(10, 10))
         
+        self.window_label = ctk.CTkLabel(self.sidebar_frame, text="Systemic Memory (Window):", anchor="w")
+        self.window_label.grid(row=6, column=0, padx=20, pady=(10, 0))
+        self.window_slider = ctk.CTkSlider(self.sidebar_frame, from_=3, to=100, command=self._on_slider_change)
+        self.window_slider.set(20)
+        self.window_slider.grid(row=7, column=0, padx=20, pady=(5, 10))
+        
         # AI Epistemic Engine Switch
         self.run_ai_switch = ctk.CTkSwitch(self.sidebar_frame, text="Enable AI Agents")
-        self.run_ai_switch.grid(row=6, column=0, padx=20, pady=(10, 20))
+        self.run_ai_switch.grid(row=8, column=0, padx=20, pady=(10, 20))
         # Default is off (0)
         
         if HAS_DND:
             self.dnd_label = ctk.CTkLabel(self.sidebar_frame, text="[Drag & Drop Active]", text_color="green", font=ctk.CTkFont(size=10))
-            self.dnd_label.grid(row=7, column=0, padx=20, pady=5)
+            self.dnd_label.grid(row=9, column=0, padx=20, pady=5)
             self.drop_target_register(DND_FILES)
             self.dnd_bind('<<Drop>>', self.handle_dnd)
             
         self.advanced_btn = ctk.CTkButton(self.sidebar_frame, text="Advanced Settings", state="disabled", command=self.open_advanced_settings)
-        self.advanced_btn.grid(row=8, column=0, padx=20, pady=20, sticky="s")
+        self.advanced_btn.grid(row=10, column=0, padx=20, pady=20, sticky="s")
 
         # -------------------------------------
         # MAIN FRAME
@@ -111,25 +117,49 @@ class SystemicTauApp(BaseApp):
         self.file_label = ctk.CTkLabel(self.top_bar, text="No file loaded.")
         self.file_label.pack(side="left", padx=20)
         
-        # Middle: Matplotlib 2x2 Grid
+        # Middle: Graph Area (Tabs)
         self.graph_frame = ctk.CTkFrame(self.main_frame, corner_radius=10)
         self.graph_frame.grid(row=1, column=0, sticky="nsew", pady=10)
         
-        self.fig = Figure(figsize=(10, 6), dpi=100)
-        self.ax1 = self.fig.add_subplot(221)
-        self.ax2 = self.fig.add_subplot(222)
-        self.ax3 = self.fig.add_subplot(223)
-        self.ax4 = self.fig.add_subplot(224)
-        self.fig.tight_layout(pad=3.0)
+        self.tabview = ctk.CTkTabview(self.graph_frame)
+        self.tabview.pack(fill="both", expand=True, padx=10, pady=(10, 0))
+        
+        self.tab1 = self.tabview.add("Temporal Dynamics")
+        self.tab2 = self.tabview.add("Phase Space")
+        
+        # Temporal Dynamics Tab (Fig 1)
+        self.fig1 = Figure(figsize=(10, 5), dpi=100)
+        self.ax1 = self.fig1.add_subplot(221)
+        self.ax2 = self.fig1.add_subplot(222)
+        self.ax3 = self.fig1.add_subplot(223)
+        self.ax4 = self.fig1.add_subplot(224)
+        self.fig1.tight_layout(pad=3.0)
         
         self.ax1.set_title("Systemic Tau over time: τ_s(t)")
         self.ax2.set_title("Raw Data & Acceleration (a_t)")
         self.ax3.set_title("Entropic Decay (S_e)")
         self.ax4.set_title("Systemic Coherence (C_s)")
         
-        self.canvas = FigureCanvasTkAgg(self.fig, master=self.graph_frame)
-        self.canvas.draw()
-        self.canvas.get_tk_widget().pack(fill="both", expand=True, padx=10, pady=10)
+        self.canvas1 = FigureCanvasTkAgg(self.fig1, master=self.tab1)
+        self.canvas1.draw()
+        self.canvas1.get_tk_widget().pack(fill="both", expand=True)
+        
+        self.toolbar1 = NavigationToolbar2Tk(self.canvas1, self.tab1)
+        self.toolbar1.update()
+        self.toolbar1.pack(side="bottom", fill="x")
+        
+        # Phase Space Tab (Fig 2)
+        self.fig2 = Figure(figsize=(10, 5), dpi=100)
+        self.ax_ps = self.fig2.add_subplot(111)
+        self.fig2.tight_layout(pad=3.0)
+        
+        self.canvas2 = FigureCanvasTkAgg(self.fig2, master=self.tab2)
+        self.canvas2.draw()
+        self.canvas2.get_tk_widget().pack(fill="both", expand=True)
+        
+        self.toolbar2 = NavigationToolbar2Tk(self.canvas2, self.tab2)
+        self.toolbar2.update()
+        self.toolbar2.pack(side="bottom", fill="x")
         
         # Bottom: Metrics & AI Log
         self.bottom_frame = ctk.CTkFrame(self.main_frame, fg_color="transparent")
@@ -181,6 +211,10 @@ class SystemicTauApp(BaseApp):
         lbl_value.grid(row=1, column=0, pady=(0, 5))
         return lbl_value
 
+    def _on_slider_change(self, value):
+        if self.df is not None:
+            self.analyze_data()
+
     def toggle_mode(self):
         if self.simple_mode_switch.get() == 1:
             self.advanced_btn.configure(state="disabled")
@@ -209,6 +243,12 @@ class SystemicTauApp(BaseApp):
             else:
                 self.df = pd.read_excel(file_path)
                 
+            self.time_col = None
+            for col in self.df.columns:
+                if str(col).lower() in ['date', 'time', 'fecha', 'timestamp']:
+                    self.time_col = col
+                    break
+                
             numeric_cols = self.df.select_dtypes(include='number').columns.tolist()
             if len(numeric_cols) > 0:
                 self.target_menu.configure(values=numeric_cols)
@@ -229,7 +269,7 @@ class SystemicTauApp(BaseApp):
         self.ax4.clear()
         self.ax1.plot(self.df[col_name].values, color="#1f77b4")
         self.ax1.set_title(f"Preview: {col_name}")
-        self.canvas.draw()
+        self.canvas1.draw()
             
     def analyze_data(self):
         if not self.loaded_file_path or self.df is None:
@@ -253,12 +293,17 @@ class SystemicTauApp(BaseApp):
                 
             data = numeric_df[target_col].values
             
-            window = max(3, len(data) // 20)
+            try:
+                window = int(self.window_slider.get())
+            except Exception:
+                window = max(3, len(data) // 20)
+            if window >= len(data):
+                window = max(3, len(data) // 2)
             
             # 1. Systemic Tau (Dynamic Variance across time)
             tau_series = pd.Series(data).rolling(window=window, min_periods=1).var().fillna(0).values
             tau_val = np.max(tau_series)
-            t_star = np.argmax(tau_series)
+            t_star = int(np.argmax(tau_series))
             
             # 2. Acceleration (Second Derivative of raw data)
             velocity = np.gradient(data)
@@ -269,14 +314,27 @@ class SystemicTauApp(BaseApp):
             entropy = pd.Series(data).rolling(window=window, min_periods=1).std().fillna(0).values
             max_entropy = np.max(entropy)
             
-            # 4. Systemic Coherence (Rolling Correlation)
+            # 4. Systemic Coherence (Eigenvalues)
             if len(numeric_df.columns) > 1:
-                second_col = numeric_df.drop(columns=[target_col]).var().idxmax()
-                coherence = pd.Series(data).rolling(window=window, min_periods=1).corr(numeric_df[second_col]).fillna(0).values
+                matrix_data = numeric_df.values
+                T, N = matrix_data.shape
+                coherence = np.full(T, np.nan)
+                
+                for i in range(window, T + 1):
+                    win_data = matrix_data[i-window:i, :]
+                    std_dev = win_data.std(axis=0) + 1e-9
+                    win_data_norm = (win_data - win_data.mean(axis=0)) / std_dev
+                    corr_matrix = np.corrcoef(win_data_norm, rowvar=False)
+                    eigenvalues = np.linalg.eigvals(corr_matrix)
+                    coherence[i-1] = np.max(eigenvalues).real / N
             else:
-                # Autocorrelation proxy if only 1 column
                 coherence = pd.Series(data).rolling(window=window, min_periods=1).corr(pd.Series(data).shift(1)).fillna(0).values
             min_coherence = np.nanmin(coherence)
+            
+            if getattr(self, 'time_col', None):
+                t_star_label = str(self.df[self.time_col].iloc[t_star])
+            else:
+                t_star_label = f"Index {t_star}"
             
             self.math_stats = {
                 "target_col": target_col,
@@ -289,12 +347,13 @@ class SystemicTauApp(BaseApp):
                 "max_accel": max_accel,
                 "max_entropy": max_entropy,
                 "min_coherence": min_coherence,
-                "t_star": t_star
+                "t_star": t_star,
+                "t_star_label": t_star_label
             }
             
             self.after(0, self._highlight_graph)
             
-            msg = f"Structural break detected in '{target_col}' (Tau_s={tau_val:.2f}) at index {t_star}."
+            msg = f"Structural break detected in '{target_col}' (Tau_s={tau_val:.2f}) at {t_star_label}."
             
             # --- DETERMINISTIC REPORT (NO AI) ---
             self._update_results(f"[MATHEMATICS] {msg}\n")
@@ -337,34 +396,61 @@ class SystemicTauApp(BaseApp):
         self.ax2.clear()
         self.ax3.clear()
         self.ax4.clear()
+        self.ax_ps.clear()
         
         s = self.math_stats
         t_star = s["t_star"]
         
+        time_index = np.arange(len(s["data"]))
+        if getattr(self, 'time_col', None):
+            try:
+                time_index = pd.to_datetime(self.df[self.time_col])
+                t_star_val = time_index.iloc[t_star]
+            except Exception:
+                time_index = self.df[self.time_col].astype(str).tolist()
+                t_star_val = time_index[t_star]
+        else:
+            t_star_val = t_star
+        
         # Ax1: Tau Series over time
-        self.ax1.plot(s["tau_series"], color="#1f77b4", linewidth=2, label="Systemic Tau")
-        self.ax1.axvline(x=t_star, color='r', linestyle='--', alpha=0.7)
+        self.ax1.plot(time_index, s["tau_series"], color="#1f77b4", linewidth=2, label="Systemic Tau")
+        self.ax1.axvline(x=t_star_val, color='r', linestyle='--', alpha=0.7)
         self.ax1.set_title(f"Dynamic Systemic Tau: {s['target_col']}")
         
         # Ax2: Raw Data & Acceleration
+        self.ax2.plot(time_index, s["data"], color="#7f7f7f", linewidth=1.5, alpha=0.5, label="Raw Data")
         ax2_twin = self.ax2.twinx()
-        self.ax2.plot(s["data"], color="#7f7f7f", linewidth=1.5, alpha=0.5, label="Raw Data")
-        ax2_twin.plot(s["acceleration"], color="#ff7f0e", linewidth=1.5, label="Acceleration")
-        self.ax2.axvline(x=t_star, color='r', linestyle='--', alpha=0.7)
+        ax2_twin.plot(time_index, s["acceleration"], color="#ff7f0e", linewidth=1.5, label="Acceleration")
+        self.ax2.axvline(x=t_star_val, color='r', linestyle='--', alpha=0.7)
         self.ax2.set_title("Raw Data & Acceleration (a_t)")
         
         # Ax3: Entropic Decay
-        self.ax3.plot(s["entropy"], color="#2ca02c", linewidth=1.5)
-        self.ax3.axvline(x=t_star, color='r', linestyle='--', alpha=0.7)
+        self.ax3.plot(time_index, s["entropy"], color="#2ca02c", linewidth=1.5)
+        self.ax3.axvline(x=t_star_val, color='r', linestyle='--', alpha=0.7)
         self.ax3.set_title("Entropic Decay (S_e)")
         
         # Ax4: Systemic Coherence
-        self.ax4.plot(s["coherence"], color="#d62728", linewidth=1.5)
-        self.ax4.axvline(x=t_star, color='r', linestyle='--', alpha=0.7)
+        self.ax4.plot(time_index, s["coherence"], color="#d62728", linewidth=1.5)
+        self.ax4.axvline(x=t_star_val, color='r', linestyle='--', alpha=0.7)
         self.ax4.set_title("Systemic Coherence (C_s)")
         
-        self.fig.tight_layout(pad=3.0)
-        self.canvas.draw()
+        self.fig1.tight_layout(pad=3.0)
+        self.canvas1.draw()
+        
+        # Phase Space (Ax_PS)
+        scatter = self.ax_ps.scatter(s["data"], s["acceleration"], c=np.arange(len(s["data"])), cmap="viridis", alpha=0.7, s=20)
+        self.ax_ps.plot(s["data"], s["acceleration"], color="gray", alpha=0.3, linewidth=0.5)
+        self.ax_ps.scatter(s["data"][t_star], s["acceleration"][t_star], color='red', marker='*', s=200, label="t* Collapse")
+        self.ax_ps.set_title("Phase Space: Data vs Acceleration")
+        self.ax_ps.set_xlabel("System State (Raw Data)")
+        self.ax_ps.set_ylabel("System Momentum (Acceleration)")
+        self.ax_ps.legend()
+        if not hasattr(self, '_cbar_added'):
+            self.fig2.colorbar(scatter, ax=self.ax_ps, label="Time Flow")
+            self._cbar_added = True
+            
+        self.fig2.tight_layout(pad=3.0)
+        self.canvas2.draw()
         
         # Update metrics panel with cleaner formatting
         def fmt(val):
@@ -376,17 +462,17 @@ class SystemicTauApp(BaseApp):
         self.lbl_accel.configure(text=fmt(s['max_accel']))
         self.lbl_entropy.configure(text=fmt(s['max_entropy']))
         self.lbl_coherence.configure(text=f"{s['min_coherence']:.2f}")
-        self.lbl_tstar.configure(text=f"Index {t_star}")
+        self.lbl_tstar.configure(text=s['t_star_label'])
 
     def _generate_deterministic_report(self):
         s = self.math_stats
-        t_star = s['t_star']
+        t_star_label = s['t_star_label']
         target_col = s['target_col']
         
         report = (
             f"\n--- STRUCTURAL DIAGNOSIS REPORT ---\n"
             f"1. TOPOLOGICAL REORGANIZATION (τ_s):\n"
-            f"   A critical structural break (t*) was isolated at sequence index [{t_star}].\n"
+            f"   A critical structural break (t*) was isolated at sequence [{t_star_label}].\n"
             f"   The absolute magnitude (variance) of the anomaly for '{target_col}' peaked at {s['tau_val']:.2e}.\n"
             f"   According to Systemic Tau, this signifies the exact moment the system crossed its structural mass threshold.\n\n"
             
@@ -452,8 +538,10 @@ class SystemicTauApp(BaseApp):
         
         def _build_pdf():
             try:
-                temp_img = "temp_plot.png"
-                self.fig.savefig(temp_img, dpi=150)
+                temp_img1 = "temp_plot1.png"
+                temp_img2 = "temp_plot2.png"
+                self.fig1.savefig(temp_img1, dpi=150)
+                self.fig2.savefig(temp_img2, dpi=150)
                 
                 pdf = FPDF()
                 pdf.add_page()
@@ -476,11 +564,14 @@ class SystemicTauApp(BaseApp):
                     pdf.cell(0, 6, f"- Peak Acceleration (a_t): {fmt(s['max_accel'])}", ln=True)
                     pdf.cell(0, 6, f"- Maximum Entropic Decay (S_e): {fmt(s['max_entropy'])}", ln=True)
                     pdf.cell(0, 6, f"- Systemic Coherence Trough (C_s): {s['min_coherence']:.4f}", ln=True)
-                    pdf.cell(0, 6, f"- Structural Breakpoint (t*): Index {s['t_star']}", ln=True)
+                    pdf.cell(0, 6, f"- Structural Breakpoint (t*): {s['t_star_label']}", ln=True)
                 pdf.ln(5)
                 
-                # Plot
-                pdf.image(temp_img, x=10, w=190)
+                # Plot 1
+                pdf.image(temp_img1, x=10, w=190)
+                pdf.ln(5)
+                # Plot 2
+                pdf.image(temp_img2, x=10, w=190)
                 pdf.ln(5)
                 
                 # AI Log or Deterministic Log
@@ -498,8 +589,10 @@ class SystemicTauApp(BaseApp):
                 pdf.multi_cell(0, 4, clean_log)
                 
                 pdf.output(save_path)
-                if os.path.exists(temp_img):
-                    os.remove(temp_img)
+                if os.path.exists(temp_img1):
+                    os.remove(temp_img1)
+                if os.path.exists(temp_img2):
+                    os.remove(temp_img2)
                     
                 succ_msg = f"\n[SUCCESS] Academic PDF Exported to: {save_path}\n"
                 self.after(0, lambda msg=succ_msg: self._update_results(msg))
