@@ -611,7 +611,6 @@ class SystemicTauApp(BaseApp):
                     sensitivity_narrative = f"WARNING: High Parameter Sensitivity (Std = {t_std:.1f} periods). The transition is highly scale-dependent. Conclusion: This is not a well-defined point-in-time shock, but a prolonged structural degradation process. ACTIONABLE INSIGHT: Cease monitoring for abrupt short-term triggers. Strategic focus must shift immediately to tracking long-term structural degradation over larger time horizons."
             else:
                 sensitivity_narrative = f"Highly Stable (Std = {t_std:.1f} periods). Breakpoint is robust to parameter changes, indicating a true, well-defined instantaneous shock."
-            sensitivity_narrative += f"\n     *Note: W={window} was objectively selected because it maximizes the Signal-to-Noise Ratio (SNR = {snr:.2f}). Alternate windows dilute the signal with excessive noise."
                 
             # Multivariate Synchrony
             multivariate_count = len(numeric_df.columns)
@@ -922,54 +921,47 @@ class SystemicTauApp(BaseApp):
                 f"indicates a severe external shock precipitating the topological collapse.\n"
             )
             
+        sens_narrative = s['sensitivity_narrative']
+        if 'ACTIONABLE INSIGHT:' in sens_narrative:
+            sens_part1 = sens_narrative.split('ACTIONABLE INSIGHT:')[0].strip()
+            sens_part2 = 'ACTIONABLE INSIGHT: ' + sens_narrative.split('ACTIONABLE INSIGHT:')[1].strip()
+        elif 'IMPLICATION:' in sens_narrative:
+            sens_part1 = sens_narrative.split('IMPLICATION:')[0].strip()
+            sens_part2 = 'IMPLICATION: ' + sens_narrative.split('IMPLICATION:')[1].strip()
+        else:
+            sens_part1 = sens_narrative.strip()
+            sens_part2 = "Robust structural transition verified across multiple time scales."
+
         report = (
             f"\n=======================================\n"
             f"{exec_summary}"
             f"=======================================\n\n"
             
-            f"--- STRUCTURAL DIAGNOSIS REPORT ---\n"
-            f"1. TOPOLOGICAL REORGANIZATION (τ_s):\n"
-            f"   Breakpoint Detected: [{t_star_label}] (Variance anomaly peak: {fmt(s['tau_val'])}).\n"
-            f"   Significance: Marks the precise temporal coordinate where the system's topological stability fractured.\n\n"
+            f"1. KEY METRICS AND BREAKPOINT DETECTION\n"
+            f"- Topological Reorganization (τ_s): Breakpoint detected at [{t_star_label}] with a peak variance anomaly of {fmt(s['tau_val'])}.\n"
+            f"- Acceleration Momentum (a_t): Peak = {fmt(s['max_accel'])}.\n"
+            f"- Entropic Decay (S_e): Max Volatility = {fmt(s['max_entropy'])}.\n"
+            f"- Systemic Coherence (C_s): Min Coupling = {fmt(s['min_coherence'])}.\n"
+            f"- Multivariate Synchrony: {s['multivariate_str'].replace(chr(10) + '     -> ', ' ')}\n\n"
             
-            f"   [WINDOW OPTIMIZATION (Systemic Memory)]\n"
-            f"   Analyzed with W={s['window']} to maximize Signal-to-Noise Ratio (SNR = {fmt(s['snr'])}).\n"
-            f"   Significance: This memory span strictly isolates the core transition geometry from background volatility.\n\n"
+            f"2. STATISTICAL VALIDATION AND ROBUSTNESS\n"
+            f"- Null Model (Monte Carlo): p-value = {s['p_value']:.4f} ({s['significance_str'].split('.')[0]}). {'.'.join(s['significance_str'].split('.')[1:]).strip()}\n"
+            f"- Early Warning Signals: {s['precursor_signal'].strip()}\n\n"
             
-            f"2. ACCELERATION MOMENTUM (a_t):\n"
-            f"   Peak Momentum: {fmt(s['max_accel'])}.\n"
-            f"   Significance: Quantifies the external force that destabilized the system's equilibrium.\n\n"
+            f"3. TRANSITION CHARACTERIZATION\n"
+            f"- Transition Geometry: FWHM = {s['fwhm_str']} periods | Relaxation Time = {s['relax_str']} periods.\n"
+            f"- Post-Collapse State: {s['post_regime']}.\n\n"
             
-            f"3. ENTROPIC DECAY (S_e):\n"
-            f"   Maximum Chaos: {fmt(s['max_entropy'])}.\n"
-            f"   Significance: Measures the accumulation of internal volatility and loss of system constraints.\n\n"
+            f"4. SENSITIVITY ANALYSIS\n"
+            f"- Parameter Stability: {sens_part1}\n"
+            f"- Implication: {sens_part2}\n\n"
             
-            f"4. SYSTEMIC COHERENCE (C_s):\n"
-            f"   Coherence Minimum: {fmt(s['min_coherence'])}.\n"
-            f"   Significance: Indicates structural desynchronization; variables lost mutual coupling during the anomaly.\n\n"
+            f"5. FINAL ANALYTICAL VERDICT\n"
+            f"{s['final_verdict'].strip()}\n\n"
             
-            f"5. ROBUSTNESS & STATISTICAL VALIDATION:\n"
-            f"   - Null Model (Monte Carlo): {s['n_perm']} unrestricted random surrogates evaluated.\n"
-            f"     Result: p-value = {s['p_value']:.4f} -> {s['significance_str']}\n"
-            f"   - Effect Size: {s['effect_size']:.2f} standard deviations above historical baseline.\n"
-            f"   - Early Warning Signals: {s['precursor_signal']}\n"
-            f"   - Transition Geometry: FWHM = {s['fwhm_str']} periods | Relaxation Time = {s['relax_str']} periods.\n"
-            f"   - Post-Collapse State: {s['post_regime']}.\n"
-            f"   - Multivariate Synchrony: {s['multivariate_str']}\n\n"
-            f"   [SENSITIVITY MATRIX]\n"
-            f"   Window | Breakpoint (t*) | Max Tau_s\n"
-            f"{matrix_str}"
-            f"   -> {s['sensitivity_narrative']}\n\n"
-            f"6. FINAL ANALYTICAL VERDICT:\n"
-            f"   => {s['final_verdict']}\n"
-            
-            f"---------------------------------------\n"
-            f"METHODOLOGICAL PARAMETERS:\n"
-            f"- Metric: Dynamic Variance (Systemic Tau)\n"
-            f"- Window: {s['window']} | Stride: 1\n"
-            f"- Surrogate: Monte Carlo (Unrestricted Shuffling)\n"
-            f"- Null Hypothesis (H0): Absence of temporal memory.\n"
-            f"=======================================\n"
+            f"6. METHODOLOGY\n"
+            f"- Analytical Memory: Window (W) = {s['window']} periods, objectively selected to maximize Signal-to-Noise Ratio (SNR = {fmt(s['snr'])}).\n"
+            f"- Surrogate Testing: {s['n_perm']} unrestricted random permutations evaluated.\n"
         )
         self._update_results(report)
 
