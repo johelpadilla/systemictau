@@ -208,11 +208,11 @@ class SystemicTauApp(BaseApp):
         self.toolbar2.pack(side="bottom", fill="x")
         
         # Early Warning Signals Tab (Fig 3)
-        self.fig3 = Figure(figsize=(10, 8), dpi=100)
+        self.fig3 = Figure(figsize=(10, 5.5), dpi=100)
         self.ax_ews1 = self.fig3.add_subplot(311)
         self.ax_ews2 = self.fig3.add_subplot(312)
         self.ax_ews3 = self.fig3.add_subplot(313)
-        self.fig3.tight_layout(pad=3.0)
+        self.fig3.tight_layout(pad=1.5)
         
         self.canvas3 = FigureCanvasTkAgg(self.fig3, master=self.tab3)
         self.canvas3.draw()
@@ -851,7 +851,7 @@ class SystemicTauApp(BaseApp):
         self.ax_ews3.axvspan(max(0, t_star_val - s["window"]), t_star_val, color='red', alpha=0.1)
         self.ax_ews3.set_title("Rolling Skewness (Regime Asymmetry)")
         
-        self.fig3.tight_layout(pad=3.0)
+        self.fig3.tight_layout(pad=1.5)
         self.canvas3.draw()
         
         # Phase Space (Ax_PS)
