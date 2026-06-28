@@ -485,6 +485,7 @@ class SystemicTauApp(BaseApp):
             # 3. Early Warning Signals (Precursors) & Objective Transition Metrics
             precursor_signal = "None Detected. The system showed no early warning signals."
             has_precursors = False
+            pass_count = 0
             if t_star > window:
                 pre_data = data[:t_star]
                 s_data = pd.Series(pre_data)
@@ -498,23 +499,34 @@ class SystemicTauApp(BaseApp):
                     var_slope = np.polyfit(np.arange(window), var_series[-window:], 1)[0]
                     skew_slope = np.polyfit(np.arange(window), skew_series[-window:], 1)[0]
                     
+                    if ar1_slope > 0.05:
+                        pass_count += 1
+                    if var_slope > 0.05:
+                        pass_count += 1
+                    if abs(skew_slope) > 0.05:
+                        pass_count += 1
+                    
                     sig_list = [
                         f"AR-1: {ar1_slope:+.3f}" + (" (PASS)" if ar1_slope > 0.05 else " (FAIL)"),
                         f"Var: {var_slope:+.3f}" + (" (PASS)" if var_slope > 0.05 else " (FAIL)"),
                         f"Skew: {skew_slope:+.3f}" + (" (PASS)" if abs(skew_slope) > 0.05 else " (FAIL)")
                     ]
                     
-                    if ar1_slope > 0.05 or var_slope > 0.05 or abs(skew_slope) > 0.05:
+                    if pass_count == 3:
                         has_precursors = True
-                        precursor_signal = "YES. Signals detected -> " + " | ".join(sig_list)
+                        precursor_signal = "STRONG EWS. Broad systemic degradation -> " + " | ".join(sig_list)
+                    elif pass_count > 0:
+                        has_precursors = False # Too weak to trigger global endogenous alarm
+                        precursor_signal = "PARTIAL EWS. Mixed signals of resilience loss -> " + " | ".join(sig_list)
                     else:
-                        precursor_signal = "NO. Sudden Shock -> " + " | ".join(sig_list)
-            precursor_signal += f"\n     (Methodology: Evaluated via rolling monotonic regression slope over the exact W={window} periods immediately preceding t*={t_star})."
+                        has_precursors = False
+                        precursor_signal = "NONE. Sudden Shock -> " + " | ".join(sig_list)
+            precursor_signal += f"\n     (Methodology: Evaluated via rolling monotonic regression slope over the exact W={window} periods immediately preceding t*=[{t_star_label}])."
                         
             # Final Analytical Verdict (Resolution Engine)
-            if p_value >= 0.05 and has_precursors:
-                final_verdict = "STRUCTURAL STRESS SURVIVED.\n     -> Finding: The system suffered significant resilience degradation (precursors) but successfully absorbed the final shock without a complete topological break.\n     -> Action: Do not treat as a false alarm. Inject resources or reduce load to restore baseline resilience before the next external shock hits."
-            elif p_value >= 0.05 and not has_precursors:
+            if p_value >= 0.05 and pass_count > 0:
+                final_verdict = "SUB-CRITICAL STRESS (NO COLLAPSE).\n     -> Finding: The system exhibited some internal stress (precursors), but the final anomaly is mathematically indistinguishable from random noise (p>0.05). No structural collapse occurred.\n     -> Action: The system is resilient. Monitor the precursor metrics, but no immediate systemic intervention is required."
+            elif p_value >= 0.05 and pass_count == 0:
                 final_verdict = "PURE NOISE.\n     -> Finding: No precursors, and the peak is statistically insignificant.\n     -> Action: No systemic intervention required. Resume normal operations."
             elif p_value < 0.05 and has_precursors:
                 final_verdict = "TRUE ENDOGENOUS COLLAPSE.\n     -> Finding: The system degraded structurally from within (precursors) before suffering a significant break.\n     -> Action: Intervene directly on the 'Leading Driver' variables to break the synchronous lock-in."
@@ -576,7 +588,7 @@ class SystemicTauApp(BaseApp):
                     sensitivity_narrative = f"WARNING: High Parameter Sensitivity (Std = {t_std:.1f} periods). The transition is highly scale-dependent. Conclusion: This is not a well-defined point-in-time shock, but a prolonged structural degradation process."
             else:
                 sensitivity_narrative = f"Highly Stable (Std = {t_std:.1f} periods). Breakpoint is robust to parameter changes, indicating a true, well-defined instantaneous shock."
-            sensitivity_narrative += f"\n     *Note: Despite drift, W={window} was chosen deterministically because it mathematically maximizes the Signal-to-Noise Ratio (SNR)."
+            sensitivity_narrative += f"\n     *Note: W={window} was objectively selected because it maximizes the Signal-to-Noise Ratio (SNR = {snr:.2f}). Alternate windows dilute the signal with excessive noise."
                 
             # Multivariate Synchrony
             multivariate_count = len(numeric_df.columns)
