@@ -102,34 +102,39 @@ class SystemicTauApp(BaseApp):
         self.target_label = ctk.CTkLabel(self.sidebar_frame, text="Target Parameter (τ_s):", anchor="w")
         self.target_label.grid(row=4, column=0, padx=20, pady=(10, 0))
         self.target_menu = ctk.CTkOptionMenu(self.sidebar_frame, values=["[Load File First]"], command=self._redraw_preview)
-        self.target_menu.grid(row=5, column=0, padx=20, pady=(10, 10))
+        self.target_menu.grid(row=5, column=0, padx=20, pady=(10, 5))
+        
+        # Secondary Variable Selection (Overlay)
+        self.secondary_label = ctk.CTkLabel(self.sidebar_frame, text="Secondary Overlay:", anchor="w", text_color="gray60")
+        self.secondary_label.grid(row=6, column=0, padx=20, pady=(5, 0))
+        self.secondary_menu = ctk.CTkOptionMenu(self.sidebar_frame, values=["[None]"], command=self.analyze_data)
+        self.secondary_menu.grid(row=7, column=0, padx=20, pady=(5, 10))
         
         self.window_label = ctk.CTkLabel(self.sidebar_frame, text="Systemic Memory (Window):", anchor="w")
-        self.window_label.grid(row=6, column=0, padx=20, pady=(10, 0))
+        self.window_label.grid(row=8, column=0, padx=20, pady=(10, 0))
         
         self.window_slider = ctk.CTkSlider(self.sidebar_frame, from_=3, to=100, command=self._on_slider_change)
         self.window_slider.set(20)
-        self.window_slider.grid(row=7, column=0, padx=20, pady=(5, 5))
+        self.window_slider.grid(row=9, column=0, padx=20, pady=(5, 5))
         
         self.optimize_btn = ctk.CTkButton(self.sidebar_frame, text="⚡ Auto-Optimize Window", command=self.optimize_window, fg_color="#2ca02c", hover_color="#238023")
-        self.optimize_btn.grid(row=8, column=0, padx=20, pady=(0, 10))
+        self.optimize_btn.grid(row=10, column=0, padx=20, pady=(0, 10))
         
         self.animate_btn = ctk.CTkButton(self.sidebar_frame, text="▶ Animate Phase Space", command=self.animate_phase_space, state="disabled", fg_color="#ff7f0e", hover_color="#d62728")
-        self.animate_btn.grid(row=9, column=0, padx=20, pady=(0, 10))
+        self.animate_btn.grid(row=11, column=0, padx=20, pady=(0, 10))
         
         # AI Epistemic Engine Switch
         self.run_ai_switch = ctk.CTkSwitch(self.sidebar_frame, text="Enable AI Agents")
-        self.run_ai_switch.grid(row=9, column=0, padx=20, pady=(10, 20))
-        # Default is off (0)
+        self.run_ai_switch.grid(row=12, column=0, padx=20, pady=(10, 20))
         
         if HAS_DND:
             self.dnd_label = ctk.CTkLabel(self.sidebar_frame, text="[Drag & Drop Active]", text_color="green", font=ctk.CTkFont(size=10))
-            self.dnd_label.grid(row=10, column=0, padx=20, pady=5)
+            self.dnd_label.grid(row=13, column=0, padx=20, pady=5)
             self.drop_target_register(DND_FILES)
             self.dnd_bind('<<Drop>>', self.handle_dnd)
             
         self.advanced_btn = ctk.CTkButton(self.sidebar_frame, text="Advanced Settings", state="disabled", command=self.open_advanced_settings)
-        self.advanced_btn.grid(row=11, column=0, padx=20, pady=20, sticky="s")
+        self.advanced_btn.grid(row=14, column=0, padx=20, pady=20, sticky="s")
 
         # -------------------------------------
         # MAIN FRAME
@@ -152,6 +157,9 @@ class SystemicTauApp(BaseApp):
         
         self.file_label = ctk.CTkLabel(self.top_bar, text="No file loaded.")
         self.file_label.pack(side="left", padx=20)
+        
+        self.workspace_btn = ctk.CTkButton(self.top_bar, text="🪟 New Workspace", command=self.open_new_workspace, height=40, fg_color="transparent", border_width=1, text_color="gray80")
+        self.workspace_btn.pack(side="right", padx=10)
         
         # Middle: Graph Area (Tabs)
         self.graph_frame = ctk.CTkFrame(self.main_frame, corner_radius=10)
@@ -301,10 +309,14 @@ class SystemicTauApp(BaseApp):
             if len(numeric_cols) > 0:
                 self.target_menu.configure(values=numeric_cols)
                 self.target_menu.set(numeric_cols[0])
+                self.secondary_menu.configure(values=["[None]"] + numeric_cols)
+                self.secondary_menu.set("[None]")
                 self._redraw_preview(numeric_cols[0])
             else:
                 self.target_menu.configure(values=["[No Numeric Data]"])
                 self.target_menu.set("[No Numeric Data]")
+                self.secondary_menu.configure(values=["[None]"])
+                self.secondary_menu.set("[None]")
         except Exception as e:
             self.file_label.configure(text=f"Error reading file: {e}")
             
@@ -564,6 +576,19 @@ class SystemicTauApp(BaseApp):
         tau_danger = np.mean(pre_break_tau) + 3 * np.std(pre_break_tau)
         self.ax1.axhline(y=tau_danger, color='red', linestyle=':', alpha=0.5, label="Historical Stability Limit")
         
+        # Multi-Variable Overlay logic on Ax1
+        sec_col = self.secondary_menu.get()
+        if sec_col and sec_col != "[None]" and sec_col in self.df.columns:
+            if not hasattr(self, 'ax1_twin'):
+                self.ax1_twin = self.ax1.twinx()
+            self.ax1_twin.clear()
+            sec_data = self.df[sec_col].ffill().fillna(0).values
+            self.ax1_twin.plot(time_index, sec_data, color="gray", linestyle=":", linewidth=1.5, alpha=0.7, label=sec_col)
+            self.ax1_twin.legend(loc="upper right")
+        else:
+            if hasattr(self, 'ax1_twin'):
+                self.ax1_twin.clear()
+        
         pre_break_acc = s["acceleration"][:max(1, t_star)]
         acc_danger = np.mean(pre_break_acc) + 3 * np.std(pre_break_acc)
         
@@ -580,8 +605,15 @@ class SystemicTauApp(BaseApp):
         # Ax2: Raw Data & Acceleration
         self.ax2.plot(time_index, s["data"], color="#7f7f7f", linewidth=1.5, alpha=0.5, label="Raw Data")
         self.ax2_twin.plot(time_index, s["acceleration"], color="#ff7f0e", linewidth=1.5, label="Acceleration")
+        
+        # Overlay Tau Curve on Raw Data (Scaled)
+        if np.max(s["tau_series"]) > 0:
+            tau_scaled = (s["tau_series"] / np.max(s["tau_series"])) * np.max(s["data"])
+            self.ax2.plot(time_index, tau_scaled, color="#1f77b4", linestyle="--", linewidth=1.5, alpha=0.8, label="Tau (Overlay)")
+            
         self.ax2.axvline(x=t_star_val, color='r', linestyle='--', alpha=0.7)
         self.ax2.set_title("Raw Data & Acceleration (a_t)")
+        self.ax2.legend(loc="upper left")
         
         # Ax3: Entropic Decay
         self.ax3.plot(time_index, s["entropy"], color="#2ca02c", linewidth=1.5)
@@ -807,6 +839,10 @@ class SystemicTauApp(BaseApp):
         ctk.CTkSwitch(agent_frame, text="Enable Critic Agent (Adversarial Consensus)").pack(anchor="w", padx=20, pady=5)
         
         ctk.CTkButton(self.adv_window, text="Apply Changes", command=self.adv_window.destroy).pack(pady=20)
+
+    def open_new_workspace(self):
+        import subprocess
+        subprocess.Popen([sys.executable, sys.argv[0]])
 
 def main():
     if not ctk:
