@@ -483,7 +483,8 @@ class SystemicTauApp(BaseApp):
                 significance_str = f"Not Significant. Implies a {p_value*100:.1f}% false positive rate. Under the Null Hypothesis, this peak easily arises by chance, invalidating the structural break."
             
             # 3. Early Warning Signals (Precursors) & Objective Transition Metrics
-            precursor_signal = "None Detected. The system showed no early warning signals, implying a Sudden External Shock."
+            precursor_signal = "None Detected. The system showed no early warning signals."
+            has_precursors = False
             if t_star > window:
                 pre_data = data[:t_star]
                 s_data = pd.Series(pre_data)
@@ -497,18 +498,27 @@ class SystemicTauApp(BaseApp):
                     var_slope = np.polyfit(np.arange(window), var_series[-window:], 1)[0]
                     skew_slope = np.polyfit(np.arange(window), skew_series[-window:], 1)[0]
                     
-                    signals_detected = []
-                    if ar1_slope > 0.05:
-                        signals_detected.append(f"Critical Slowing Down (AR-1 slope: +{ar1_slope:.3f})")
-                    if var_slope > 0.05:
-                        signals_detected.append(f"Loss of Resilience (Var slope: +{var_slope:.3f})")
-                    if abs(skew_slope) > 0.05:
-                        signals_detected.append(f"Asymmetry Shift (Skew slope: {skew_slope:.3f})")
+                    sig_list = [
+                        f"AR-1: {ar1_slope:+.3f}" + (" (PASS)" if ar1_slope > 0.05 else " (FAIL)"),
+                        f"Var: {var_slope:+.3f}" + (" (PASS)" if var_slope > 0.05 else " (FAIL)"),
+                        f"Skew: {skew_slope:+.3f}" + (" (PASS)" if abs(skew_slope) > 0.05 else " (FAIL)")
+                    ]
                     
-                    if signals_detected:
-                        precursor_signal = "YES. " + " | ".join(signals_detected)
+                    if ar1_slope > 0.05 or var_slope > 0.05 or abs(skew_slope) > 0.05:
+                        has_precursors = True
+                        precursor_signal = "YES. Signals detected -> " + " | ".join(sig_list)
                     else:
-                        precursor_signal = f"Sudden Shock. No signals detected (AR-1: {ar1_slope:.3f}, Var: {var_slope:.3f}, Skew: {skew_slope:.3f})."
+                        precursor_signal = "NO. Sudden Shock -> " + " | ".join(sig_list)
+                        
+            # Final Analytical Verdict (Resolution Engine)
+            if p_value >= 0.05 and has_precursors:
+                final_verdict = "FALSE POSITIVE WITH ANTECEDENTS. While the system exhibited degrading resilience (precursors), the actual anomaly at t* does not exceed random topological noise. The collapse is mathematically a non-event, though the system was stressed."
+            elif p_value >= 0.05 and not has_precursors:
+                final_verdict = "PURE NOISE. No precursors, and the peak is statistically insignificant. Disregard this breakpoint."
+            elif p_value < 0.05 and has_precursors:
+                final_verdict = "TRUE ENDOGENOUS COLLAPSE. The system degraded structurally from within (precursors) before suffering a mathematically significant topological break."
+            else:
+                final_verdict = "TRUE EXOGENOUS SHOCK. The system suffered a mathematically significant break with zero prior warning, indicating a massive external driver."
             
             # 4. Uncertainty Bounds (FWHM & Relaxation)
             fwhms = []
@@ -560,6 +570,7 @@ class SystemicTauApp(BaseApp):
                 sensitivity_narrative = f"WARNING: High Parameter Sensitivity (Std = {t_std:.1f} periods). The transition is highly scale-dependent. At shorter memory windows, the math captures early micro-instabilities. At longer windows, it captures the delayed macro-collapse. Conclusion: This is not a well-defined point-in-time shock, but a prolonged structural degradation process."
             else:
                 sensitivity_narrative = f"Highly Stable (Std = {t_std:.1f} periods). Breakpoint is robust to parameter changes, indicating a true, well-defined instantaneous shock."
+            sensitivity_narrative += f"\n   *Note: Despite drift, W={window} was chosen deterministically because it mathematically maximizes the Signal-to-Noise Ratio (SNR)."
                 
             # Multivariate Synchrony
             multivariate_count = len(numeric_df.columns)
@@ -569,12 +580,16 @@ class SystemicTauApp(BaseApp):
                 corr_matrix = pre_collapse_df.corr().values
                 np.fill_diagonal(corr_matrix, np.nan)
                 mean_r = np.nanmean(corr_matrix)
+                max_r = np.nanmax(corr_matrix)
+                min_r = np.nanmin(corr_matrix)
+                
+                sync_range = f"(Mean: {mean_r:.2f}, Min: {min_r:.2f}, Max: {max_r:.2f})"
                 if mean_r > 0.6:
-                    multivariate_str = f"High System-wide Synchrony (Mean Pairwise r = {mean_r:.2f}). Variables locked-in together prior to collapse."
+                    multivariate_str = f"High System-wide Synchrony {sync_range}. Variables locked-in together prior to collapse."
                 elif mean_r < 0.3:
-                    multivariate_str = f"Low Synchrony (Mean Pairwise r = {mean_r:.2f}). The collapse was driven by isolated variables rather than global coordination."
+                    multivariate_str = f"Low Synchrony {sync_range}. The collapse was driven by isolated variables rather than global coordination."
                 else:
-                    multivariate_str = f"Moderate Synchrony (Mean Pairwise r = {mean_r:.2f}) across {multivariate_count} variables."
+                    multivariate_str = f"Moderate Synchrony {sync_range} across {multivariate_count} variables."
             
             self.math_stats = {
                 "target_col": target_col,
@@ -601,6 +616,7 @@ class SystemicTauApp(BaseApp):
                 "relax_str": relax_str,
                 "post_regime": post_regime,
                 "precursor_signal": precursor_signal,
+                "final_verdict": final_verdict,
                 "multivariate_str": multivariate_str,
                 "n_perm": n_perm
             }
@@ -861,7 +877,9 @@ class SystemicTauApp(BaseApp):
             f"   [SENSITIVITY MATRIX]\n"
             f"   Window | Breakpoint (t*) | Max Tau_s\n"
             f"{matrix_str}"
-            f"   -> {s['sensitivity_narrative']}\n"
+            f"   -> {s['sensitivity_narrative']}\n\n"
+            f"6. FINAL ANALYTICAL VERDICT:\n"
+            f"   => {s['final_verdict']}\n"
             
             f"---------------------------------------\n"
             f"METHODOLOGICAL PARAMETERS:\n"
