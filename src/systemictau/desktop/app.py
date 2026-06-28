@@ -630,7 +630,7 @@ class SystemicTauApp(BaseApp):
                 leading_idx = np.nanargmax(mean_corrs)
                 leading_col = pre_collapse_df.columns[leading_idx]
                 leading_val = mean_corrs[leading_idx]
-                leading_str = f"Leading Driver Detected: '{leading_col}' exhibited the highest systemic coupling (r={leading_val:.2f}) prior to collapse."
+                leading_str = f"Leading Driver Detected: '{leading_col}' exhibited the highest systemic coupling (r={leading_val:.2f}) prior to collapse.\n     -> Significance: Operational interventions must prioritize '{leading_col}' to decouple the system dynamics."
                 
                 if mean_r > 0.6:
                     multivariate_str = f"High System-wide Synchrony {sync_range}. Variables locked-in together.\n     -> {leading_str}\n     -> Implication: A localized shock here will likely propagate globally."
@@ -911,7 +911,7 @@ class SystemicTauApp(BaseApp):
                 f"EXECUTIVE SUMMARY:\n"
                 f"The system exhibited a period of heightened volatility at {t_star_label}, but mathematical evaluation "
                 f"(p={s['p_value']:.2f}) confirms this was NOT a true structural collapse. The peak momentum of {fmt(s['max_accel'])} "
-                f"is mathematically consistent with random noise or sub-critical stress, but does not indicate structural collapse.\n"
+                f"is mathematically consistent with random noise and does not indicate structural collapse.\n"
             )
         else:
             exec_summary = (
@@ -937,15 +937,15 @@ class SystemicTauApp(BaseApp):
             
             f"2. ACCELERATION MOMENTUM (a_t):\n"
             f"   Peak Momentum: {fmt(s['max_accel'])}.\n"
-            f"   Significance: Quantifies the sheer mathematical force propelling the system out of equilibrium.\n\n"
+            f"   Significance: Quantifies the external force that destabilized the system's equilibrium.\n\n"
             
             f"3. ENTROPIC DECAY (S_e):\n"
             f"   Maximum Chaos: {fmt(s['max_entropy'])}.\n"
-            f"   Significance: Internal thermodynamic chaos accumulated, actively destabilizing historical constraints.\n\n"
+            f"   Significance: Measures the accumulation of internal volatility and loss of system constraints.\n\n"
             
             f"4. SYSTEMIC COHERENCE (C_s):\n"
             f"   Coherence Minimum: {fmt(s['min_coherence'])}.\n"
-            f"   Significance: Variables desynchronized and lost mutual coupling, signaling a breakdown in global coordination.\n\n"
+            f"   Significance: Indicates structural desynchronization; variables lost mutual coupling during the anomaly.\n\n"
             
             f"5. ROBUSTNESS & STATISTICAL VALIDATION:\n"
             f"   - Null Model (Monte Carlo): {s['n_perm']} unrestricted random surrogates evaluated.\n"
