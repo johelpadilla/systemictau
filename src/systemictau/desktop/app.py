@@ -509,17 +509,17 @@ class SystemicTauApp(BaseApp):
                         precursor_signal = "YES. Signals detected -> " + " | ".join(sig_list)
                     else:
                         precursor_signal = "NO. Sudden Shock -> " + " | ".join(sig_list)
-            precursor_signal += "\n     (Methodology: Evaluated via rolling monotonic regression slope prior to t*)."
+            precursor_signal += f"\n     (Methodology: Evaluated via rolling monotonic regression slope over the exact W={window} periods immediately preceding t*={t_star})."
                         
             # Final Analytical Verdict (Resolution Engine)
             if p_value >= 0.05 and has_precursors:
-                final_verdict = "FALSE POSITIVE WITH ANTECEDENTS.\n     -> Finding: While the system exhibited degrading resilience (precursors), the final anomaly does not exceed random noise.\n     -> Practical Implication: The system absorbed a shock without topological failure, but resilience is dangerously low. A future perturbation could cause true collapse. Maintain preventive monitoring."
+                final_verdict = "STRUCTURAL STRESS SURVIVED.\n     -> Finding: The system suffered significant resilience degradation (precursors) but successfully absorbed the final shock without a complete topological break.\n     -> Action: Do not treat as a false alarm. Inject resources or reduce load to restore baseline resilience before the next external shock hits."
             elif p_value >= 0.05 and not has_precursors:
-                final_verdict = "PURE NOISE.\n     -> Finding: No precursors, and the peak is statistically insignificant.\n     -> Practical Implication: The detected breakpoint is a mathematical artifact. Disregard."
+                final_verdict = "PURE NOISE.\n     -> Finding: No precursors, and the peak is statistically insignificant.\n     -> Action: No systemic intervention required. Resume normal operations."
             elif p_value < 0.05 and has_precursors:
-                final_verdict = "TRUE ENDOGENOUS COLLAPSE.\n     -> Finding: The system degraded structurally from within (precursors) before suffering a significant break.\n     -> Practical Implication: The collapse was a predictable systemic failure, not just a random shock."
+                final_verdict = "TRUE ENDOGENOUS COLLAPSE.\n     -> Finding: The system degraded structurally from within (precursors) before suffering a significant break.\n     -> Action: Intervene directly on the 'Leading Driver' variables to break the synchronous lock-in."
             else:
-                final_verdict = "TRUE EXOGENOUS SHOCK.\n     -> Finding: A mathematically significant break with zero prior warning.\n     -> Practical Implication: The collapse was driven by a massive, unpredictable external driver (Black Swan event)."
+                final_verdict = "TRUE EXOGENOUS SHOCK.\n     -> Finding: A mathematically significant break with zero prior warning.\n     -> Action: Since this shock gave zero warning, predictive models will fail. Redirect focus to building buffer capacity against external impacts."
             
             # 4. Uncertainty Bounds (FWHM & Relaxation)
             fwhms = []
@@ -571,7 +571,7 @@ class SystemicTauApp(BaseApp):
                 t_min = np.min(t_star_arr)
                 t_max = np.max(t_star_arr)
                 if t_max - t_min > 20:
-                    sensitivity_narrative = f"WARNING: Dual Time-Scales Detected (Std = {t_std:.1f} periods). Short-memory windows isolate a micro-event near t*={t_min}, while long-memory windows isolate a macro-event near t*={t_max}. Conclusion: The system experienced sequential degradation across different temporal scales, rather than a single shock."
+                    sensitivity_narrative = f"WARNING: Dual Time-Scales Detected (Std = {t_std:.1f} periods). The short-term anomaly at t={t_min} represents a localized micro-shock, while the long-term anomaly at t={t_max} represents a systemic macro-shift. Interpretation: The system's vulnerability is horizon-dependent; it reacts differently depending on the speed of the stressor."
                 else:
                     sensitivity_narrative = f"WARNING: High Parameter Sensitivity (Std = {t_std:.1f} periods). The transition is highly scale-dependent. Conclusion: This is not a well-defined point-in-time shock, but a prolonged structural degradation process."
             else:
