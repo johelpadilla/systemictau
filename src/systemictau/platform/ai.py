@@ -2,10 +2,9 @@
 Systemic Tau - AI Intelligence Layer
 Uses Large Language Models to suggest parameters and auto-generate scientific reports.
 """
-from typing import Dict
 try:
     from pydantic import BaseModel
-    import pydantic
+    import pydantic  # noqa: F401
 except ImportError:
     pass
 
@@ -24,9 +23,9 @@ def generate_latex_report(episodes, t_star, topic="Complex System Transition"):
     except ImportError:
         raise ImportError("AI module requires google-genai. Run 'pip install systemictau[ai]'")
         
-    client = genai.Client()
+    genai.Client()
     
-    prompt = f"""
+    f"""
     You are an expert in Kairological Dynamics and Complex Systems.
     I have run the Systemic Tau topological layer extraction on a {topic}.
     
@@ -57,7 +56,7 @@ def suggest_parameters(taus_global) -> ParameterSuggestion:
     except ImportError:
         raise ImportError("AI module requires google-genai. Run 'pip install systemictau[ai]'")
     
-    client = genai.Client()
+    genai.Client()
     
     # Mocking the interaction for the library skeleton
     # response = client.models.generate_content(

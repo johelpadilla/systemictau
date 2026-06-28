@@ -223,7 +223,10 @@ class SystemicTauApp(BaseApp):
     def _redraw_preview(self, col_name):
         if self.df is None or col_name not in self.df.columns:
             return
-        self.ax1.clear(); self.ax2.clear(); self.ax3.clear(); self.ax4.clear()
+        self.ax1.clear()
+        self.ax2.clear()
+        self.ax3.clear()
+        self.ax4.clear()
         self.ax1.plot(self.df[col_name].values, color="#1f77b4")
         self.ax1.set_title(f"Preview: {col_name}")
         self.canvas.draw()
@@ -330,7 +333,10 @@ class SystemicTauApp(BaseApp):
                 self._update_results(f"\n[ERROR] Analysis failed: {e}\n")
                 
     def _highlight_graph(self):
-        self.ax1.clear(); self.ax2.clear(); self.ax3.clear(); self.ax4.clear()
+        self.ax1.clear()
+        self.ax2.clear()
+        self.ax3.clear()
+        self.ax4.clear()
         
         s = self.math_stats
         t_star = s["t_star"]
@@ -495,9 +501,11 @@ class SystemicTauApp(BaseApp):
                 if os.path.exists(temp_img):
                     os.remove(temp_img)
                     
-                self.after(0, lambda: self._update_results(f"\n[SUCCESS] Academic PDF Exported to: {save_path}\n"))
+                succ_msg = f"\n[SUCCESS] Academic PDF Exported to: {save_path}\n"
+                self.after(0, lambda msg=succ_msg: self._update_results(msg))
             except Exception as e:
-                self.after(0, lambda: self._update_results(f"\n[ERROR] PDF Generation failed: {e}\n"))
+                err_msg = f"\n[ERROR] PDF Generation failed: {e}\n"
+                self.after(0, lambda msg=err_msg: self._update_results(msg))
                 
         threading.Thread(target=_build_pdf, daemon=True).start()
 

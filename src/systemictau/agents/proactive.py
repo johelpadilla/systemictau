@@ -42,9 +42,9 @@ def run_proactive_engine():
                 # would be spun up via Kubernetes to test the claim. For the bootstrap, we log the intent.
                 
                 # Assume a successful test bumps confidence
-                new_conf = min(conf + 0.15, 0.95)
+                min(conf + 0.15, 0.95)
                 # kg.update_hypothesis_confidence(h_id, new_conf) # mock update
-                print(f"[PROACTIVE ENGINE] Simulated test complete. Epistemic resolution advanced.")
+                print("[PROACTIVE ENGINE] Simulated test complete. Epistemic resolution advanced.")
             except Exception as e:
                 print(f"[PROACTIVE ENGINE] Failed to resolve void: {e}")
                 

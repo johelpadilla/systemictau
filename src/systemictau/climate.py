@@ -3,7 +3,6 @@ Systemic Tau - Climate Science Extension
 Specialized tools for analyzing ecological transitions and tipping points using Kairological Dynamics.
 """
 from systemictau import systemic_tau
-from systemictau.layers import extract_joint_episodes
 
 def detect_climate_tipping_points(climate_data_matrix):
     """

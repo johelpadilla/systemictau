@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from systemictau.gis import spatial_tau
+from systemictau.spatial import spatial_tau
 
 def test_spatial_tau():
     try:

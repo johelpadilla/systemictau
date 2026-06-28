@@ -3,14 +3,11 @@ try:
 except ImportError:
     pass
 
-import os
 from tenacity import retry, stop_after_attempt, wait_exponential
-from systemictau.platform.ai import generate_latex_report
 from systemictau.graph.db import KnowledgeGraphService
 from systemictau.config import settings
-from systemictau.agents.tools import PubMedSearchTool, WebSearchTool
+from systemictau.agents.tools import PubMedSearchTool
 from google import genai
-from google.genai import types
 
 if 'faust' in globals():
     kafka_broker = settings.kafka_broker

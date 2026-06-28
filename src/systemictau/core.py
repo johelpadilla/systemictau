@@ -2,7 +2,7 @@ import numpy as np
 import scipy.stats as stats
 import itertools
 from dataclasses import dataclass, field
-from typing import Dict, Any, Tuple
+from typing import Dict, Any
 import time
 import logging
 
@@ -176,7 +176,7 @@ def _compute_taus_jax(X, window_size=13, stride=1):
     """
     try:
         import jax.numpy as jnp
-        from jax import jit, vmap
+        from jax import jit, vmap  # noqa: F401
     except ImportError:
         raise ImportError("JAX is required. Run 'pip install systemictau[performance]'")
         

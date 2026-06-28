@@ -3,8 +3,6 @@ try:
 except ImportError:
     pass
 
-import os
-import json
 import numpy as np
 from systemictau import systemic_tau
 from systemictau.streaming.models import StreamPayload

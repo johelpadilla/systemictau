@@ -1,9 +1,10 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import requests
 
-from systemictau import systemic_tau, from_dataframe, ChaosGenerator
-from systemictau.visualization import plot_tau_evolution, plot_joint_episodes, plot_ontological_layers
+from systemictau import from_dataframe, ChaosGenerator
+from systemictau.visualization import plot_tau_evolution
 from systemictau.layers import (
     hyper_persistence, rolling_rqa, critical_mass_metric, 
     compute_antisynchronization, extract_joint_episodes,
@@ -214,7 +215,7 @@ with tab4:
                             fill=True,
                             popup=f"Tau: {row['spatial_tau']:.2f}"
                         ).add_to(m)
-                    except:
+                    except Exception:
                         pass
                 st_folium(m, width=700, height=500)
                 
@@ -223,7 +224,6 @@ with tab4:
     else:
         st.info("Please load data in the first tab.")
 
-import requests
 with tab5:
     st.header("Autonomous AI & Knowledge Graph")
     st.markdown("Query the Neo4j graph for historical ontological ascents and LLM reports.")

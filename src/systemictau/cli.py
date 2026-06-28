@@ -93,7 +93,7 @@ def ui():
     import sys
     
     try:
-        import streamlit
+        import streamlit  # noqa: F401
     except ImportError:
         typer.secho("Streamlit not installed. Run 'pip install systemictau[platform]'", fg=typer.colors.RED)
         raise typer.Exit(code=1)

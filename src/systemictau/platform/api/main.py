@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, UploadFile, File, BackgroundTasks, WebSocket, Depends, status, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, UploadFile, File, WebSocket, Depends, WebSocketDisconnect
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import jwt
 from pydantic import BaseModel
@@ -19,8 +19,6 @@ from systemictau.layers import (
 from systemictau.recd import compute_recd_increments
 from systemictau.graph.db import KnowledgeGraphService
 
-import json
-import asyncio
 from systemictau.config import settings
 
 app = FastAPI(title="Systemic Tau Enterprise API v5.0", version="5.0.0")
