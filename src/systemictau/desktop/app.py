@@ -84,7 +84,7 @@ class SystemicTauApp(BaseApp):
         # -------------------------------------
         self.sidebar_frame = ctk.CTkFrame(self, width=220, corner_radius=0)
         self.sidebar_frame.grid(row=0, column=0, sticky="nsew")
-        self.sidebar_frame.grid_rowconfigure(5, weight=1)
+        self.sidebar_frame.grid_rowconfigure(15, weight=1)
         
         self.logo_label = ctk.CTkLabel(self.sidebar_frame, text="Systemic Tau", font=ctk.CTkFont(size=24, weight="bold"))
         self.logo_label.grid(row=0, column=0, padx=20, pady=(30, 20))
@@ -93,43 +93,55 @@ class SystemicTauApp(BaseApp):
         self.simple_mode_switch.grid(row=1, column=0, padx=20, pady=10)
         self.simple_mode_switch.select()
         
+        # Time Variable Selection
+        self.time_label = ctk.CTkLabel(self.sidebar_frame, text="Time Variable (X-Axis):", anchor="w")
+        self.time_label.grid(row=2, column=0, padx=20, pady=(15, 0))
+        self.time_menu = ctk.CTkOptionMenu(self.sidebar_frame, values=["[Auto Detect]"], command=lambda _: self._redraw_preview(self.target_menu.get()))
+        self.time_menu.grid(row=3, column=0, padx=20, pady=(5, 5))
+        
+        # Data Health Strategy
+        self.health_label_side = ctk.CTkLabel(self.sidebar_frame, text="Missing Data Strategy:", anchor="w")
+        self.health_label_side.grid(row=4, column=0, padx=20, pady=(10, 0))
+        self.health_menu = ctk.CTkOptionMenu(self.sidebar_frame, values=["Prompt Me", "Auto-Interpolate", "Strict (Abort)"])
+        self.health_menu.grid(row=5, column=0, padx=20, pady=(5, 5))
+        
         # Target Variable Selection
         self.target_label = ctk.CTkLabel(self.sidebar_frame, text="Target Parameter (τ_s):", anchor="w")
-        self.target_label.grid(row=4, column=0, padx=20, pady=(10, 0))
+        self.target_label.grid(row=6, column=0, padx=20, pady=(10, 0))
         self.target_menu = ctk.CTkOptionMenu(self.sidebar_frame, values=["[Load File First]"], command=self._redraw_preview)
-        self.target_menu.grid(row=5, column=0, padx=20, pady=(10, 5))
+        self.target_menu.grid(row=7, column=0, padx=20, pady=(5, 5))
         
         # Secondary Variable Selection (Overlay)
         self.secondary_label = ctk.CTkLabel(self.sidebar_frame, text="Secondary Overlay:", anchor="w", text_color="gray60")
-        self.secondary_label.grid(row=6, column=0, padx=20, pady=(5, 0))
+        self.secondary_label.grid(row=8, column=0, padx=20, pady=(10, 0))
         self.secondary_menu = ctk.CTkOptionMenu(self.sidebar_frame, values=["[None]"], command=self.analyze_data)
-        self.secondary_menu.grid(row=7, column=0, padx=20, pady=(5, 10))
+        self.secondary_menu.grid(row=9, column=0, padx=20, pady=(5, 10))
         
         self.window_label = ctk.CTkLabel(self.sidebar_frame, text="Systemic Memory (Window):", anchor="w")
-        self.window_label.grid(row=8, column=0, padx=20, pady=(10, 0))
+        self.window_label.grid(row=10, column=0, padx=20, pady=(10, 0))
         
         self.window_slider = ctk.CTkSlider(self.sidebar_frame, from_=3, to=100, command=self._on_slider_change)
         self.window_slider.set(20)
-        self.window_slider.grid(row=9, column=0, padx=20, pady=(5, 5))
+        self.window_slider.grid(row=11, column=0, padx=20, pady=(5, 5))
         
         self.optimize_btn = ctk.CTkButton(self.sidebar_frame, text="⚡ Auto-Optimize Window", command=self.optimize_window, fg_color="#2ca02c", hover_color="#238023")
-        self.optimize_btn.grid(row=10, column=0, padx=20, pady=(0, 10))
+        self.optimize_btn.grid(row=12, column=0, padx=20, pady=(0, 10))
         
         self.animate_btn = ctk.CTkButton(self.sidebar_frame, text="▶ Animate Phase Space", command=self.animate_phase_space, state="disabled", fg_color="#ff7f0e", hover_color="#d62728")
-        self.animate_btn.grid(row=11, column=0, padx=20, pady=(0, 10))
+        self.animate_btn.grid(row=13, column=0, padx=20, pady=(0, 10))
         
         # AI Epistemic Engine Switch
         self.run_ai_switch = ctk.CTkSwitch(self.sidebar_frame, text="Enable AI Agents")
-        self.run_ai_switch.grid(row=12, column=0, padx=20, pady=(10, 20))
+        self.run_ai_switch.grid(row=14, column=0, padx=20, pady=(10, 20))
         
         if HAS_DND:
             self.dnd_label = ctk.CTkLabel(self.sidebar_frame, text="[Drag & Drop Active]", text_color="green", font=ctk.CTkFont(size=10))
-            self.dnd_label.grid(row=13, column=0, padx=20, pady=5)
+            self.dnd_label.grid(row=15, column=0, padx=20, pady=5)
             self.drop_target_register(DND_FILES)
             self.dnd_bind('<<Drop>>', self.handle_dnd)
             
         self.advanced_btn = ctk.CTkButton(self.sidebar_frame, text="Advanced Settings", state="disabled", command=self.open_advanced_settings)
-        self.advanced_btn.grid(row=14, column=0, padx=20, pady=20, sticky="s")
+        self.advanced_btn.grid(row=16, column=0, padx=20, pady=20, sticky="s")
 
         # -------------------------------------
         # MAIN FRAME (Scrollable to fit everything)
@@ -557,6 +569,14 @@ class SystemicTauApp(BaseApp):
             if self.time_col is None and len(self.df.columns) > 0:
                 self.time_col = self.df.columns[0]
                 
+            # Populate Time Menu
+            if hasattr(self, 'time_menu'):
+                self.time_menu.configure(values=["[Auto Detect]"] + list(self.df.columns))
+                if self.time_col and self.time_col in self.df.columns:
+                    self.time_menu.set(self.time_col)
+                else:
+                    self.time_menu.set("[Auto Detect]")
+                
             numeric_cols = self.df.select_dtypes(include='number').columns.tolist()
             if len(numeric_cols) > 0:
                 self.target_menu.configure(values=numeric_cols)
@@ -706,7 +726,10 @@ class SystemicTauApp(BaseApp):
                 coherence = pd.Series(data).rolling(window=window, min_periods=1).corr(pd.Series(data).shift(1)).fillna(0).values
             min_coherence = np.nanmin(coherence)
             
-            if getattr(self, 'time_col', None):
+            if hasattr(self, 'time_menu') and self.time_menu.get() != "[Auto Detect]":
+                time_c = self.time_menu.get()
+                t_star_label = str(self.df[time_c].iloc[t_star])
+            elif getattr(self, 'time_col', None):
                 t_star_label = str(self.df[self.time_col].iloc[t_star])
             else:
                 t_star_label = f"Index {t_star}"
