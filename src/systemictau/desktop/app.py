@@ -467,16 +467,9 @@ class SystemicTauApp(BaseApp):
         s = self.math_stats
         t_star = s["t_star"]
         
+        # Force strict monotonic integer index for plotting to prevent X-axis looping/clustering
         time_index = np.arange(len(s["data"]))
-        if getattr(self, 'time_col', None):
-            try:
-                time_index = pd.to_datetime(self.df[self.time_col])
-                t_star_val = time_index.iloc[t_star]
-            except Exception:
-                time_index = np.arange(len(s["data"]))
-                t_star_val = t_star
-        else:
-            t_star_val = t_star
+        t_star_val = t_star
         
         # Ax1: Tau Series over time
         self.ax1.plot(time_index, s["tau_series"], color="#1f77b4", linewidth=2, label="Systemic Tau")
