@@ -453,15 +453,19 @@ class SystemicTauApp(BaseApp):
                 t_star_label = f"Index {t_star}"
                 
             # --- ROBUSTNESS & VALIDATION ENGINE ---
-            # 1. Sensitivity Analysis
-            w_minus = max(3, window - 2)
-            w_plus = min(len(data), window + 2)
-            tau_minus = pd.Series(data).rolling(window=w_minus, min_periods=1).var().fillna(0).values
-            tau_plus = pd.Series(data).rolling(window=w_plus, min_periods=1).var().fillna(0).values
-            t_star_minus = int(np.argmax(tau_minus)) if len(tau_minus) > 0 else t_star
-            t_star_plus = int(np.argmax(tau_plus)) if len(tau_plus) > 0 else t_star
-            t_star_range = max(abs(t_star - t_star_minus), abs(t_star - t_star_plus))
-            sensitivity_str = "Highly Stable" if t_star_range <= 2 else f"Moderate (Drifts by ~{t_star_range} periods)"
+            # 1. Detailed Sensitivity Matrix & Effect Size
+            tau_mean_hist = np.mean(tau_series[:t_star]) if t_star > 0 else np.mean(tau_series)
+            tau_std_hist = np.std(tau_series[:t_star]) if t_star > 0 else np.std(tau_series)
+            effect_size = (tau_val - tau_mean_hist) / (tau_std_hist + 1e-9)
+            
+            sensitivity_matrix = []
+            # Calculate for unique windows around the current window
+            test_windows = sorted(list(set([max(3, window-4), max(3, window-2), window, min(len(data), window+2), min(len(data), window+4)])))
+            for w_test in test_windows:
+                t_test = pd.Series(data).rolling(window=w_test, min_periods=1).var().fillna(0).values
+                t_star_test = int(np.argmax(t_test)) if len(t_test) > 0 else t_star
+                tau_max_test = np.max(t_test) if len(t_test) > 0 else 0
+                sensitivity_matrix.append((w_test, t_star_test, tau_max_test))
             
             # 2. Null Model Monte Carlo (p-value)
             n_perm = 500
@@ -473,24 +477,43 @@ class SystemicTauApp(BaseApp):
             p_value = np.sum(np.array(surrogate_taus) >= tau_val) / n_perm
             significance_str = "Statistically Significant" if p_value < 0.05 else "Indistinguishable from Random Noise"
             
-            # 3. Transition Characterization
-            threshold_50 = tau_val * 0.5
-            pre_t_data = tau_series[:t_star]
-            above_50_idx = np.where(pre_t_data >= threshold_50)[0]
-            buildup_duration = t_star - above_50_idx[0] if len(above_50_idx) > 0 else 0
-            transition_speed = "Abrupt Flash Crash" if buildup_duration <= window else f"Gradual Degradation ({buildup_duration} periods)"
+            # 3. Early Warning Signals (Precursors) & Objective Transition Metrics
+            precursor_signal = "None Detected (Sudden Shock)"
+            if t_star > window:
+                # Calculate lag-1 autocorrelation leading up to the break (Critical Slowing Down)
+                pre_data = data[:t_star]
+                ar1_series = pd.Series(pre_data).rolling(window=window).corr(pd.Series(pre_data).shift(1)).fillna(0).values
+                if len(ar1_series) > window:
+                    recent_ar1 = ar1_series[-window:]
+                    slope = np.polyfit(np.arange(len(recent_ar1)), recent_ar1, 1)[0]
+                    if slope > 0.05:
+                        precursor_signal = "Critical Slowing Down Detected (AR-1 Increase)"
             
-            post_t_data = tau_series[t_star+1:t_star+1+window]
-            if len(post_t_data) > 0:
-                recovery_mean = np.mean(post_t_data)
-                if recovery_mean < tau_val * 0.3:
-                    recovery_state = "System recovered stability"
-                elif recovery_mean > tau_val * 0.7:
-                    recovery_state = "System remains in chaotic state"
-                else:
-                    recovery_state = "System partially stabilized"
+            # FWHM (Full Width at Half Maximum)
+            threshold_50 = tau_val * 0.5
+            peak_indices = np.where(tau_series >= threshold_50)[0]
+            if len(peak_indices) > 0:
+                fwhm_duration = 0
+                for i in range(t_star, -1, -1):
+                    if tau_series[i] >= threshold_50:
+                        fwhm_duration += 1
+                    else:
+                        break
+                for i in range(t_star+1, len(tau_series)):
+                    if tau_series[i] >= threshold_50:
+                        fwhm_duration += 1
+                    else:
+                        break
             else:
-                recovery_state = "Insufficient data post-collapse"
+                fwhm_duration = 1
+                
+            # Relaxation Time
+            relaxation_time = "> Data Limit"
+            baseline_upper = tau_mean_hist + tau_std_hist
+            for i in range(t_star+1, len(tau_series)):
+                if tau_series[i] <= baseline_upper:
+                    relaxation_time = f"{i - t_star} periods"
+                    break
                 
             multivariate_count = len(numeric_df.columns)
             
@@ -510,11 +533,13 @@ class SystemicTauApp(BaseApp):
                 "tau_median": tau_median,
                 "snr": snr,
                 "window": window,
-                "sensitivity_str": sensitivity_str,
+                "sensitivity_matrix": sensitivity_matrix,
+                "effect_size": effect_size,
                 "p_value": p_value,
                 "significance_str": significance_str,
-                "transition_speed": transition_speed,
-                "recovery_state": recovery_state,
+                "fwhm_duration": fwhm_duration,
+                "relaxation_time": relaxation_time,
+                "precursor_signal": precursor_signal,
                 "multivariate_count": multivariate_count,
                 "n_perm": n_perm
             }
@@ -725,6 +750,11 @@ class SystemicTauApp(BaseApp):
                 return f"{val:.6f}"
             return f"{val:,.2f}"
         
+        matrix_str = ""
+        for w_test, t_test, tau_test in s['sensitivity_matrix']:
+            mark = "(*)" if w_test == s['window'] else "   "
+            matrix_str += f"   {w_test:6d} | {t_test:15d} | {tau_test:,.2f} {mark}\n"
+            
         report = (
             f"\n=======================================\n"
             f"EXECUTIVE SUMMARY:\n"
@@ -760,13 +790,23 @@ class SystemicTauApp(BaseApp):
             f"   the system's variables disconnected or desynchronized from each other during the collapse.\n\n"
             
             f"5. ROBUSTNESS & STATISTICAL VALIDATION:\n"
-            f"   - Null Model (Monte Carlo): {s['n_perm']} random surrogates evaluated.\n"
+            f"   - Null Model (Monte Carlo): {s['n_perm']} unrestricted random surrogates evaluated.\n"
             f"     Result: p-value = {s['p_value']:.4f} ({s['significance_str']}).\n"
-            f"   - Sensitivity Analysis (Window ±2): The structural break position (t*) is {s['sensitivity_str']}.\n"
-            f"   - Transition Speed: {s['transition_speed']}.\n"
-            f"   - Post-Transition: {s['recovery_state']}.\n"
-            f"   - Multivariate Synchrony: Evaluated jointly across {s['multivariate_count']} variables.\n"
+            f"   - Effect Size: {s['effect_size']:.2f} standard deviations above historical baseline.\n"
+            f"   - Early Warning Signals: {s['precursor_signal']}.\n"
+            f"   - Transition Geometry: FWHM = {s['fwhm_duration']} periods | Relaxation Time = {s['relaxation_time']}.\n"
+            f"   - Multivariate Synchrony: Evaluated jointly across {s['multivariate_count']} variables.\n\n"
+            f"   [SENSITIVITY MATRIX]\n"
+            f"   Window | Breakpoint (t*) | Max Tau_s\n"
+            f"{matrix_str}\n"
+            
             f"---------------------------------------\n"
+            f"METHODOLOGICAL PARAMETERS:\n"
+            f"- Metric: Dynamic Variance (Systemic Tau)\n"
+            f"- Window: {s['window']} | Stride: 1\n"
+            f"- Surrogate: Monte Carlo (Unrestricted Shuffling)\n"
+            f"- Null Hypothesis (H0): Absence of temporal memory.\n"
+            f"=======================================\n"
         )
         self._update_results(report)
 
