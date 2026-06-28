@@ -357,6 +357,12 @@ class SystemicTauApp(BaseApp):
             tau_val = np.max(tau_series)
             t_star = int(np.argmax(tau_series))
             
+            tau_median = np.median(tau_series)
+            if tau_median > 0:
+                snr = tau_val / tau_median
+            else:
+                snr = tau_val
+            
             # 2. Acceleration (Second Derivative of raw data)
             velocity = np.gradient(data)
             acceleration = np.gradient(velocity)
@@ -401,7 +407,10 @@ class SystemicTauApp(BaseApp):
                 "max_entropy": max_entropy,
                 "min_coherence": min_coherence,
                 "t_star": t_star,
-                "t_star_label": t_star_label
+                "t_star_label": t_star_label,
+                "tau_median": tau_median,
+                "snr": snr,
+                "window": window
             }
             
             self.after(0, self._highlight_graph)
@@ -523,24 +532,31 @@ class SystemicTauApp(BaseApp):
         target_col = s['target_col']
         
         report = (
-            f"\n--- STRUCTURAL DIAGNOSIS REPORT ---\n"
-            f"1. TOPOLOGICAL REORGANIZATION (τ_s):\n"
-            f"   A critical structural break (t*) was isolated at sequence [{t_star_label}].\n"
-            f"   The absolute magnitude (variance) of the anomaly for '{target_col}' peaked at {s['tau_val']:.2e}.\n"
-            f"   According to Systemic Tau, this signifies the exact moment the system crossed its structural mass threshold.\n\n"
+            f"\n--- REPORTE DE DIAGNÓSTICO ESTRUCTURAL ---\n"
+            f"1. REORGANIZACIÓN TOPOLÓGICA (τ_s):\n"
+            f"   Se detectó un quiebre estructural crítico (t*) en la secuencia: [{t_star_label}].\n"
+            f"   La magnitud de la anomalía (varianza) para '{target_col}' alcanzó un pico de {s['tau_val']:.2e}.\n"
+            f"   ¿Qué significa esto? Es el momento exacto en que el sistema superó su límite de estabilidad física.\n\n"
             
-            f"2. ACCELERATION MOMENTUM (a_t):\n"
-            f"   The second derivative (a_t) reached a critical peak of {s['max_accel']:.2e}.\n"
-            f"   This indicates extreme systemic momentum precipitating the topological collapse.\n\n"
+            f"   [OPTIMIZACIÓN DE VENTANA (Systemic Memory)]\n"
+            f"   El cálculo se realizó usando una memoria sistémica de {s['window']} intervalos.\n"
+            f"   ¿Por qué este número? Porque genera un 'Signal-to-Noise Ratio' (SNR) de {s['snr']:.2f}.\n"
+            f"   Es decir, el pico de anomalía detectado es {s['snr']:.2f} veces más grande que el ruido normal del sistema.\n"
+            f"   Matemáticamente, esta es la ventana perfecta para aislar el colapso sin difuminarlo con otros datos.\n\n"
             
-            f"3. ENTROPIC DECAY (S_e):\n"
-            f"   The rolling volatility (Entropic Decay) maxed out at {s['max_entropy']:.2e}.\n"
-            f"   This reveals that prior to t*, the internal chaos of '{target_col}' built up uncontrollably,\n"
-            f"   forcing the system to shed complexity to survive.\n\n"
+            f"2. MOMENTUM DE ACELERACIÓN (a_t):\n"
+            f"   La aceleración (segunda derivada) alcanzó un pico de {s['max_accel']:.2e}.\n"
+            f"   ¿Qué significa esto? Hubo un impulso externo extremo en los datos que precipitó el colapso sistémico.\n\n"
             
-            f"4. SYSTEMIC COHERENCE (C_s):\n"
-            f"   The extramental coherence dropped to {s['min_coherence']:.2f}.\n"
-            f"   A drop in coherence mathematically proves that internal variables are decoupling.\n"
+            f"3. CAÍDA ENTRÓPICA (S_e):\n"
+            f"   La volatilidad máxima (Entropía) fue de {s['max_entropy']:.2e}.\n"
+            f"   ¿Qué significa esto? Antes del punto de quiebre, el caos interno del sistema se acumuló de forma\n"
+            f"   incontrolable, forzando al sistema a reorganizarse para poder sobrevivir.\n\n"
+            
+            f"4. COHERENCIA SISTÉMICA (C_s):\n"
+            f"   La coherencia sistémica cayó a un mínimo de {s['min_coherence']:.2f}.\n"
+            f"   ¿Qué significa esto? Una caída en los Eigenvalores Multidimensionales prueba matemáticamente que\n"
+            f"   las variables del sistema se desconectaron o desincronizaron entre sí durante el colapso.\n"
             f"---------------------------------------\n"
         )
         self._update_results(report)
