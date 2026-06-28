@@ -170,6 +170,7 @@ class SystemicTauApp(BaseApp):
         
         self.tab1 = self.tabview.add("Temporal Dynamics")
         self.tab2 = self.tabview.add("Phase Space")
+        self.tab3 = self.tabview.add("Early Warning Signals")
         
         # Temporal Dynamics Tab (Fig 1)
         self.fig1 = Figure(figsize=(10, 5), dpi=100)
@@ -205,6 +206,21 @@ class SystemicTauApp(BaseApp):
         self.toolbar2 = NavigationToolbar2Tk(self.canvas2, self.tab2)
         self.toolbar2.update()
         self.toolbar2.pack(side="bottom", fill="x")
+        
+        # Early Warning Signals Tab (Fig 3)
+        self.fig3 = Figure(figsize=(10, 8), dpi=100)
+        self.ax_ews1 = self.fig3.add_subplot(311)
+        self.ax_ews2 = self.fig3.add_subplot(312)
+        self.ax_ews3 = self.fig3.add_subplot(313)
+        self.fig3.tight_layout(pad=3.0)
+        
+        self.canvas3 = FigureCanvasTkAgg(self.fig3, master=self.tab3)
+        self.canvas3.draw()
+        self.canvas3.get_tk_widget().pack(fill="both", expand=True)
+        
+        self.toolbar3 = NavigationToolbar2Tk(self.canvas3, self.tab3)
+        self.toolbar3.update()
+        self.toolbar3.pack(side="bottom", fill="x")
         
         # Bottom: Metrics & AI Log
         self.bottom_frame = ctk.CTkFrame(self.main_frame, fg_color="transparent")
@@ -486,13 +502,16 @@ class SystemicTauApp(BaseApp):
             precursor_signal = "None Detected. The system showed no early warning signals."
             has_precursors = False
             pass_count = 0
+            
+            full_s_data = pd.Series(data)
+            ews_ar1 = full_s_data.rolling(window=window).corr(full_s_data.shift(1)).fillna(0).values
+            ews_var = full_s_data.rolling(window=window).var().fillna(0).values
+            ews_skew = full_s_data.rolling(window=window).skew().fillna(0).values
+            
             if t_star > window:
-                pre_data = data[:t_star]
-                s_data = pd.Series(pre_data)
-                
-                ar1_series = s_data.rolling(window=window).corr(s_data.shift(1)).fillna(0).values
-                var_series = s_data.rolling(window=window).var().fillna(0).values
-                skew_series = s_data.rolling(window=window).skew().fillna(0).values
+                ar1_series = ews_ar1[:t_star]
+                var_series = ews_var[:t_star]
+                skew_series = ews_skew[:t_star]
                 
                 if len(ar1_series) > window:
                     ar1_slope = np.polyfit(np.arange(window), ar1_series[-window:], 1)[0]
@@ -621,6 +640,9 @@ class SystemicTauApp(BaseApp):
                 "target_col": target_col,
                 "data": data,
                 "tau_series": tau_series,
+                "ews_ar1": ews_ar1,
+                "ews_var": ews_var,
+                "ews_skew": ews_skew,
                 "acceleration": acceleration,
                 "entropy": entropy,
                 "coherence": coherence,
@@ -805,6 +827,30 @@ class SystemicTauApp(BaseApp):
         self.fig1.tight_layout(pad=3.0)
         self.canvas1.draw()
         
+        # EWS Graph (Fig 3)
+        self.ax_ews1.clear()
+        self.ax_ews2.clear()
+        self.ax_ews3.clear()
+        
+        self.ax_ews1.plot(time_index, s["ews_var"], color="#ff7f0e", linewidth=1.5)
+        self.ax_ews1.axvline(x=t_star_val, color='r', linestyle='--')
+        self.ax_ews1.axvspan(max(0, t_star_val - s["window"]), t_star_val, color='red', alpha=0.1, label="Evaluation Window")
+        self.ax_ews1.set_title("Rolling Variance (Critical Slowing Down)")
+        self.ax_ews1.legend(loc="upper left")
+        
+        self.ax_ews2.plot(time_index, s["ews_ar1"], color="#2ca02c", linewidth=1.5)
+        self.ax_ews2.axvline(x=t_star_val, color='r', linestyle='--')
+        self.ax_ews2.axvspan(max(0, t_star_val - s["window"]), t_star_val, color='red', alpha=0.1)
+        self.ax_ews2.set_title("AR-1 Autocorrelation (System Memory)")
+        
+        self.ax_ews3.plot(time_index, s["ews_skew"], color="#9467bd", linewidth=1.5)
+        self.ax_ews3.axvline(x=t_star_val, color='r', linestyle='--')
+        self.ax_ews3.axvspan(max(0, t_star_val - s["window"]), t_star_val, color='red', alpha=0.1)
+        self.ax_ews3.set_title("Rolling Skewness (Regime Asymmetry)")
+        
+        self.fig3.tight_layout(pad=3.0)
+        self.canvas3.draw()
+        
         # Phase Space (Ax_PS)
         scatter = self.ax_ps.scatter(s["data"], s["acceleration"], c=np.arange(len(s["data"])), cmap="viridis", alpha=0.7, s=20)
         self.ax_ps.plot(s["data"], s["acceleration"], color="gray", alpha=0.3, linewidth=0.5)
@@ -965,8 +1011,10 @@ class SystemicTauApp(BaseApp):
             try:
                 temp_img1 = "temp_plot1.png"
                 temp_img2 = "temp_plot2.png"
+                temp_img3 = "temp_plot3.png"
                 self.fig1.savefig(temp_img1, dpi=150)
                 self.fig2.savefig(temp_img2, dpi=150)
+                self.fig3.savefig(temp_img3, dpi=150)
                 
                 pdf = FPDF()
                 pdf.add_page()
@@ -995,6 +1043,11 @@ class SystemicTauApp(BaseApp):
                 # Plot 1
                 pdf.image(temp_img1, x=10, w=190)
                 pdf.ln(5)
+                
+                # Plot 3 (EWS Evidence)
+                pdf.image(temp_img3, x=10, w=190)
+                pdf.ln(5)
+                
                 # Plot 2
                 pdf.image(temp_img2, x=10, w=190)
                 pdf.ln(5)
@@ -1018,6 +1071,8 @@ class SystemicTauApp(BaseApp):
                     os.remove(temp_img1)
                 if os.path.exists(temp_img2):
                     os.remove(temp_img2)
+                if os.path.exists(temp_img3):
+                    os.remove(temp_img3)
                     
                 succ_msg = f"\n[SUCCESS] Academic PDF Exported to: {save_path}\n"
                 self.after(0, lambda msg=succ_msg: self._update_results(msg))
