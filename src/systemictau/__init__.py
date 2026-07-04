@@ -21,6 +21,13 @@ from .dengue import compute_dengue_outbreak_risk
 from .climate import detect_climate_tipping_points
 from .finance import compute_market_crash_risk
 
+# Studio (web) is heavy; import on demand to keep base light
+try:
+    from . import studio  # noqa: F401
+    HAS_STUDIO = True
+except Exception:
+    HAS_STUDIO = False
+
 __all__ = [
     "systemic_tau",
     "SystemicTauResult",
@@ -49,5 +56,6 @@ __all__ = [
     "spatial_tau",
     "compute_dengue_outbreak_risk",
     "detect_climate_tipping_points",
-    "compute_market_crash_risk"
+    "compute_market_crash_risk",
+    "studio",
 ]

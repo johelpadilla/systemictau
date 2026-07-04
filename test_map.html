@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map_bb6611ea671a67f906b7c4bea6f41633 {
+                    position: relative;
+                    width: 100.0%;
+                    height: 100.0%;
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+                .leaflet-container { font-size: 1rem; }
+            </style>
+
+            <style>html, body {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            </style>
+
+            <style>#map {
+                position:absolute;
+                top:0;
+                bottom:0;
+                right:0;
+                left:0;
+                }
+            </style>
+
+            <script>
+                L_NO_TOUCH = false;
+                L_DISABLE_3D = false;
+            </script>
+
+        
+</head>
+<body>
+    
+    
+            <div class="folium-map" id="map_bb6611ea671a67f906b7c4bea6f41633" ></div>
+        
+</body>
+<script>
+    
+    
+            var map_bb6611ea671a67f906b7c4bea6f41633 = L.map(
+                "map_bb6611ea671a67f906b7c4bea6f41633",
+                {
+                    center: [38.881033333333335, -93.29316666666666],
+                    crs: L.CRS.EPSG3857,
+                    ...{
+  "zoom": 4,
+  "zoomControl": true,
+  "preferCanvas": false,
+}
+
+                }
+            );
+
+            
+
+        
+    
+            var tile_layer_2f9e18fd8452516fbe8da62105f45203 = L.tileLayer(
+                "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+                {
+  "minZoom": 0,
+  "maxZoom": 20,
+  "maxNativeZoom": 20,
+  "noWrap": false,
+  "attribution": "\u0026copy; \u003ca href=\"https://www.openstreetmap.org/copyright\"\u003eOpenStreetMap\u003c/a\u003e contributors \u0026copy; \u003ca href=\"https://carto.com/attributions\"\u003eCARTO\u003c/a\u003e",
+  "subdomains": "abcd",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_2f9e18fd8452516fbe8da62105f45203.addTo(map_bb6611ea671a67f906b7c4bea6f41633);
+        
+    
+            var circle_marker_9b1f0af343fd07671b2e83b38be976b5 = L.circleMarker(
+                [40.7128, -74.006],
+                {"bubblingMouseEvents": true, "color": "#3b4cc0", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#3b4cc0", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 8.0, "stroke": true, "weight": 3}
+            ).addTo(map_bb6611ea671a67f906b7c4bea6f41633);
+        
+    
+        var popup_e4109735b13210506e8d47ebd9a0842b = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_837558e78b63758e17291ccd33ba457c = $(`<div id="html_837558e78b63758e17291ccd33ba457c" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4 style="margin-bottom: 5px; color: #333;">SiteA</h4>                 <hr style="margin-top: 0; margin-bottom: 5px;">                 <b>Structural Intensity (Tau_s):</b> 0.50<br>                 <b>p-value:</b> 0.1500<br>                 <b>Verdict:</b> NOISE<br>                 <b>Leading Driver:</b> VarX             </div>             </div>`)[0];
+                popup_e4109735b13210506e8d47ebd9a0842b.setContent(html_837558e78b63758e17291ccd33ba457c);
+            
+        
+
+        circle_marker_9b1f0af343fd07671b2e83b38be976b5.bindPopup(popup_e4109735b13210506e8d47ebd9a0842b)
+        ;
+
+        
+    
+    
+            circle_marker_9b1f0af343fd07671b2e83b38be976b5.bindTooltip(
+                `<div>
+                     SiteA (Tau_s: 0.50)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_0b7d088a7e52c797d5ad20f69a5b2b82 = L.circleMarker(
+                [34.0522, -118.2437],
+                {"bubblingMouseEvents": true, "color": "#c0d4f5", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#c0d4f5", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 14.030405405405405, "stroke": true, "weight": 3}
+            ).addTo(map_bb6611ea671a67f906b7c4bea6f41633);
+        
+    
+        var popup_bd03b6e29cbaee8ed80b1371877712fe = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_2bcb5bfe5d9e6859be20e1ef5e0f66d9 = $(`<div id="html_2bcb5bfe5d9e6859be20e1ef5e0f66d9" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4 style="margin-bottom: 5px; color: #333;">SiteB</h4>                 <hr style="margin-top: 0; margin-bottom: 5px;">                 <b>Structural Intensity (Tau_s):</b> 12.40<br>                 <b>p-value:</b> 0.0400<br>                 <b>Verdict:</b> COLLAPSE<br>                 <b>Leading Driver:</b> VarY             </div>             </div>`)[0];
+                popup_bd03b6e29cbaee8ed80b1371877712fe.setContent(html_2bcb5bfe5d9e6859be20e1ef5e0f66d9);
+            
+        
+
+        circle_marker_0b7d088a7e52c797d5ad20f69a5b2b82.bindPopup(popup_bd03b6e29cbaee8ed80b1371877712fe)
+        ;
+
+        
+    
+    
+            circle_marker_0b7d088a7e52c797d5ad20f69a5b2b82.bindTooltip(
+                `<div>
+                     SiteB (Tau_s: 12.40)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_2d4ef6767de14db200f2c045229b0a85 = L.circleMarker(
+                [41.8781, -87.6298],
+                {"bubblingMouseEvents": true, "color": "#b40426", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#b40426", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 23.0, "stroke": true, "weight": 3}
+            ).addTo(map_bb6611ea671a67f906b7c4bea6f41633);
+        
+    
+        var popup_671f5590fce412d56acc0134e64fefb5 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_9288688ef5660ed490d8acd88fff9609 = $(`<div id="html_9288688ef5660ed490d8acd88fff9609" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4 style="margin-bottom: 5px; color: #333;">SiteC</h4>                 <hr style="margin-top: 0; margin-bottom: 5px;">                 <b>Structural Intensity (Tau_s):</b> 30.10<br>                 <b>p-value:</b> 0.0100<br>                 <b>Verdict:</b> COLLAPSE<br>                 <b>Leading Driver:</b> VarZ             </div>             </div>`)[0];
+                popup_671f5590fce412d56acc0134e64fefb5.setContent(html_9288688ef5660ed490d8acd88fff9609);
+            
+        
+
+        circle_marker_2d4ef6767de14db200f2c045229b0a85.bindPopup(popup_671f5590fce412d56acc0134e64fefb5)
+        ;
+
+        
+    
+    
+            circle_marker_2d4ef6767de14db200f2c045229b0a85.bindTooltip(
+                `<div>
+                     SiteC (Tau_s: 30.10)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+</script>
+</html>

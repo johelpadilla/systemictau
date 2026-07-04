@@ -57,10 +57,17 @@ Requires-Dist: google-genai; extra == "ai"
 Requires-Dist: pydantic; extra == "ai"
 Provides-Extra: desktop
 Requires-Dist: customtkinter; extra == "desktop"
+Provides-Extra: studio
+Requires-Dist: streamlit>=1.28; extra == "studio"
+Requires-Dist: matplotlib>=3.7; extra == "studio"
+Requires-Dist: pandas; extra == "studio"
+Requires-Dist: openpyxl; extra == "studio"
+Requires-Dist: pywebview; extra == "studio"
 Provides-Extra: full
 Requires-Dist: matplotlib>=3.7; extra == "full"
 Requires-Dist: seaborn; extra == "full"
 Requires-Dist: pandas; extra == "full"
+Requires-Dist: openpyxl; extra == "full"
 Requires-Dist: xarray; extra == "full"
 Requires-Dist: streamlit; extra == "full"
 Requires-Dist: typer; extra == "full"
@@ -90,6 +97,7 @@ Requires-Dist: pydantic-settings; extra == "full"
 Requires-Dist: tenacity; extra == "full"
 Requires-Dist: aiokafka; extra == "full"
 Requires-Dist: customtkinter; extra == "full"
+Requires-Dist: pywebview; extra == "full"
 Dynamic: license-file
 
 # Systemic Tau & Discrete Extramental Clock (RECD)
@@ -147,6 +155,44 @@ t_ks, max_ks = st.detect_reorganization_ks(dtk_series)
 t_star = st.consensus_transition(t_frob, t_ks)
 
 print(f"Capa 3 Transition detected at t* = {t_star}")
+```
+
+## Systemic Tau Studio (Web Application)
+
+For interactive multi-ontological analysis with publication-quality visualizations:
+
+```bash
+# Install with the studio extra (recommended)
+pip install "systemictau[studio]"
+
+# Or from source
+cd /path/to/systemictau_v4
+uv pip install --python .venv/bin/python ".[studio]"
+
+# Run the app
+# Note: file watcher is disabled by default via .streamlit/config.toml
+# to avoid reentrant stdout / watcher errors on macOS + large projects.
+PYTHONPATH=src streamlit run src/systemictau/studio/app.py
+
+# If you want to force-disable watcher explicitly:
+# PYTHONPATH=src streamlit run src/systemictau/studio/app.py --server.fileWatcherType none
+
+# or (after proper install)
+systemictau-studio
+```
+
+**Key features:**
+- Upload CSV or XLSX (panel or wide format)
+- Automatic or manual ontological partitioning (Local / Medium / Global)
+- Systemic Tau + RECD computed consistently across scales
+- High-quality plots ready for papers (PNG/SVG/PDF)
+- Built-in interpretation following the Principle of Ontological Ascent
+- What-if simulation of different clusterings
+
+**Note on Excel files:** The app requires `openpyxl`. If you see an import error, run:
+
+```bash
+uv pip install --python .venv/bin/python openpyxl
 ```
 
 ## Citation

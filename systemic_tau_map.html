@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map_043507e7d1ed1209aab8e5167019977a {
+                    position: relative;
+                    width: 100.0%;
+                    height: 100.0%;
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+                .leaflet-container { font-size: 1rem; }
+            </style>
+
+            <style>html, body {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            </style>
+
+            <style>#map {
+                position:absolute;
+                top:0;
+                bottom:0;
+                right:0;
+                left:0;
+                }
+            </style>
+
+            <script>
+                L_NO_TOUCH = false;
+                L_DISABLE_3D = false;
+            </script>
+
+        
+</head>
+<body>
+    
+    
+            <div class="folium-map" id="map_043507e7d1ed1209aab8e5167019977a" ></div>
+        
+</body>
+<script>
+    
+    
+            var map_043507e7d1ed1209aab8e5167019977a = L.map(
+                "map_043507e7d1ed1209aab8e5167019977a",
+                {
+                    center: [18.431073580610118, -66.04674569534822],
+                    crs: L.CRS.EPSG3857,
+                    ...{
+  "zoom": 4,
+  "zoomControl": true,
+  "preferCanvas": false,
+}
+
+                }
+            );
+
+            
+
+        
+    
+            var tile_layer_d623afe76eb8f48751507d3aba319727 = L.tileLayer(
+                "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+                {
+  "minZoom": 0,
+  "maxZoom": 20,
+  "maxNativeZoom": 20,
+  "noWrap": false,
+  "attribution": "\u0026copy; \u003ca href=\"https://www.openstreetmap.org/copyright\"\u003eOpenStreetMap\u003c/a\u003e contributors \u0026copy; \u003ca href=\"https://carto.com/attributions\"\u003eCARTO\u003c/a\u003e",
+  "subdomains": "abcd",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_d623afe76eb8f48751507d3aba319727.addTo(map_043507e7d1ed1209aab8e5167019977a);
+        
+    
+            var circle_marker_646b2477acaa0776128eb29a8f542eac = L.circleMarker(
+                [18.431028887142855, -66.05025616285715],
+                {"bubblingMouseEvents": true, "color": "#3c4ec2", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#3c4ec2", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 8.094664722014564, "stroke": true, "weight": 3}
+            ).addTo(map_043507e7d1ed1209aab8e5167019977a);
+        
+    
+        var popup_8d38e6421b101715d8a877a36c8e7349 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_41e0d23b3c58ec04f0f5a2e6b35a70ee = $(`<div id="html_41e0d23b3c58ec04f0f5a2e6b35a70ee" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4 style="margin-bottom: 5px; color: #333;">MacroCluster_SUM_1_9vars</h4>                 <span style='color: #d35400; font-size: 0.9em; font-weight: bold;'>[MACRO-CLUSTER CENTROID]</span><br>                 <hr style="margin-top: 0; margin-bottom: 5px;">                 <b>Systemic Coupling (Kendall):</b> 0.28<br>                 <b>p-value:</b> 1.0000<br>                 <b>Verdict:</b> NON-SIGNIFICANT NOISE (NO COLLAPSE).\n<br>                 <b>Leading Driver:</b> No             </div>             </div>`)[0];
+                popup_8d38e6421b101715d8a877a36c8e7349.setContent(html_41e0d23b3c58ec04f0f5a2e6b35a70ee);
+            
+        
+
+        circle_marker_646b2477acaa0776128eb29a8f542eac.bindPopup(popup_8d38e6421b101715d8a877a36c8e7349)
+        ;
+
+        
+    
+    
+            circle_marker_646b2477acaa0776128eb29a8f542eac.bindTooltip(
+                `<div>
+                     MacroCluster_SUM_1_9vars (Kendall: 0.28)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var polygon_a89b3fbb87e8d1ffef2eb28447093dfe = L.polygon(
+                [[18.42538277, -66.04710848], [18.42557312, -66.0562694], [18.43630449, -66.05486552], [18.43728007, -66.05227191], [18.43090312, -66.04104085], [18.42538277, -66.04710848]],
+                {"bubblingMouseEvents": true, "color": "#3c4ec2", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#3c4ec2", "fillOpacity": 0.3, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 1.0, "smoothFactor": 1.0, "stroke": true, "weight": 2}
+            ).addTo(map_043507e7d1ed1209aab8e5167019977a);
+        
+    
+            polygon_a89b3fbb87e8d1ffef2eb28447093dfe.bindTooltip(
+                `<div>
+                     MacroCluster_SUM_1_9vars Region
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_dd1551f4c043041033e473b1de701d44 = L.circleMarker(
+                [18.431774, -66.03911824600002],
+                {"bubblingMouseEvents": true, "color": "#3b4cc0", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#3b4cc0", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 8.0, "stroke": true, "weight": 3}
+            ).addTo(map_043507e7d1ed1209aab8e5167019977a);
+        
+    
+        var popup_cb6a71ea06362dd3830356e20921ffb7 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_a33a6c9c19f29d7b5097e2fac5e9798b = $(`<div id="html_a33a6c9c19f29d7b5097e2fac5e9798b" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4 style="margin-bottom: 5px; color: #333;">MacroCluster_SUM_2_10vars</h4>                 <span style='color: #d35400; font-size: 0.9em; font-weight: bold;'>[MACRO-CLUSTER CENTROID]</span><br>                 <hr style="margin-top: 0; margin-bottom: 5px;">                 <b>Systemic Coupling (Kendall):</b> 0.28<br>                 <b>p-value:</b> 1.0000<br>                 <b>Verdict:</b> NON-SIGNIFICANT NOISE (NO COLLAPSE).\n<br>                 <b>Leading Driver:</b> No             </div>             </div>`)[0];
+                popup_cb6a71ea06362dd3830356e20921ffb7.setContent(html_a33a6c9c19f29d7b5097e2fac5e9798b);
+            
+        
+
+        circle_marker_dd1551f4c043041033e473b1de701d44.bindPopup(popup_cb6a71ea06362dd3830356e20921ffb7)
+        ;
+
+        
+    
+    
+            circle_marker_dd1551f4c043041033e473b1de701d44.bindTooltip(
+                `<div>
+                     MacroCluster_SUM_2_10vars (Kendall: 0.28)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var polygon_a6fdfd9c026ef17a04b99c88f405c57c = L.polygon(
+                [[18.43654244, -66.04161192], [18.43647106, -66.03452113], [18.43209285, -66.03533014], [18.42980856, -66.03580604], [18.42547795, -66.04225438], [18.4256921, -66.04506214], [18.43654244, -66.04161192]],
+                {"bubblingMouseEvents": true, "color": "#3b4cc0", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#3b4cc0", "fillOpacity": 0.3, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 1.0, "smoothFactor": 1.0, "stroke": true, "weight": 2}
+            ).addTo(map_043507e7d1ed1209aab8e5167019977a);
+        
+    
+            polygon_a6fdfd9c026ef17a04b99c88f405c57c.bindTooltip(
+                `<div>
+                     MacroCluster_SUM_2_10vars Region
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_1a1e46963043435502d31d11a8028380 = L.circleMarker(
+                [18.430417854687498, -66.0508626771875],
+                {"bubblingMouseEvents": true, "color": "#b40426", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#b40426", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 25.0, "stroke": true, "weight": 3}
+            ).addTo(map_043507e7d1ed1209aab8e5167019977a);
+        
+    
+        var popup_c8b5619b27012d563a895213a72d3d6d = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_bd3afd2cd3358ee26ef81aa2ea27766f = $(`<div id="html_bd3afd2cd3358ee26ef81aa2ea27766f" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4 style="margin-bottom: 5px; color: #333;">MacroCluster_SUM_3_42vars</h4>                 <span style='color: #d35400; font-size: 0.9em; font-weight: bold;'>[MACRO-CLUSTER CENTROID]</span><br>                 <hr style="margin-top: 0; margin-bottom: 5px;">                 <b>Systemic Coupling (Kendall):</b> 0.49<br>                 <b>p-value:</b> 1.0000<br>                 <b>Verdict:</b> NON-SIGNIFICANT NOISE (NO COLLAPSE).\n<br>                 <b>Leading Driver:</b> Yes             </div>             </div>`)[0];
+                popup_c8b5619b27012d563a895213a72d3d6d.setContent(html_bd3afd2cd3358ee26ef81aa2ea27766f);
+            
+        
+
+        circle_marker_1a1e46963043435502d31d11a8028380.bindPopup(popup_c8b5619b27012d563a895213a72d3d6d)
+        ;
+
+        
+    
+    
+            circle_marker_1a1e46963043435502d31d11a8028380.bindTooltip(
+                `<div>
+                     MacroCluster_SUM_3_42vars (Kendall: 0.49)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var polygon_ce09ed945599bec3e0dec6dfea5db1c1 = L.polygon(
+                [[18.4230271, -66.04099326], [18.42283674, -66.05655494], [18.42987995, -66.05843471], [18.4352306, -66.05904016], [18.4377266, -66.05840165], [18.43819097, -66.05695049], [18.43459128, -66.04913102], [18.42952303, -66.03856621], [18.4230271, -66.04099326]],
+                {"bubblingMouseEvents": true, "color": "#b40426", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#b40426", "fillOpacity": 0.3, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 1.0, "smoothFactor": 1.0, "stroke": true, "weight": 2}
+            ).addTo(map_043507e7d1ed1209aab8e5167019977a);
+        
+    
+            polygon_ce09ed945599bec3e0dec6dfea5db1c1.bindTooltip(
+                `<div>
+                     MacroCluster_SUM_3_42vars Region
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+</script>
+</html>

@@ -92,7 +92,11 @@ def compute_taus(X, window_size=13, stride=1):
     if HAS_NUMBA:
         return _compute_taus_numba(X, window_size, stride)
         
-    logger.info("Numba not found. Using scipy fallback.")
+    # Only warn once per session (called 3x per full analysis: Local/Medium/Global)
+    if not getattr(compute_taus, "_numba_warned", False):
+        logger.warning("Numba not found. Using scipy fallback (slower). "
+                       "Install with: pip install numba for big speedups.")
+        compute_taus._numba_warned = True
     taus_global = np.full(T, np.nan)
     taus_per_module = np.full((T, N), np.nan)
     

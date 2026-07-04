@@ -34,11 +34,13 @@ validation = ["scikit-learn"]
 performance = ["numba", "dask", "jax", "jaxlib", "pluggy"]
 ai = ["google-genai", "pydantic"]
 desktop = ["customtkinter"]
-full = ["matplotlib>=3.7", "seaborn", "pandas", "xarray", "streamlit", "typer", "fastapi", "uvicorn", "python-multipart", "geopandas", "libpysal", "scikit-learn", "numba", "dask", "folium", "streamlit-folium", "google-genai", "celery", "redis", "websockets", "pyjwt", "jax", "jaxlib", "faust-streaming", "neo4j", "pluggy", "python-rocksdb", "prometheus-client", "pydantic-settings", "tenacity", "aiokafka", "customtkinter"]
+studio = ["streamlit>=1.28", "matplotlib>=3.7", "pandas", "openpyxl", "pywebview"]
+full = ["matplotlib>=3.7", "seaborn", "pandas", "openpyxl", "xarray", "streamlit", "typer", "fastapi", "uvicorn", "python-multipart", "geopandas", "libpysal", "scikit-learn", "numba", "dask", "folium", "streamlit-folium", "google-genai", "celery", "redis", "websockets", "pyjwt", "jax", "jaxlib", "faust-streaming", "neo4j", "pluggy", "python-rocksdb", "prometheus-client", "pydantic-settings", "tenacity", "aiokafka", "customtkinter", "pywebview"]
 
 [project.scripts]
 systemictau = "systemictau.cli:app"
 systemictau-gui = "systemictau.desktop.app:main"
+systemictau-studio = "systemictau.studio.app:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

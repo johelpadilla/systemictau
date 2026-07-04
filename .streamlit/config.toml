@@ -1,0 +1,10 @@
+[server]
+# Disable the file watcher to prevent reentrant stdout errors and excessive
+# module watching noise in large projects (common on macOS + Python 3.12).
+# You can temporarily enable it with --server.fileWatcherType auto if needed.
+fileWatcherType = "none"
+runOnSave = false
+
+[runner]
+# Faster startup, less watching
+magicEnabled = false

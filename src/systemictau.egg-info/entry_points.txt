@@ -1,3 +1,4 @@
 [console_scripts]
 systemictau = systemictau.cli:app
 systemictau-gui = systemictau.desktop.app:main
+systemictau-studio = systemictau.studio.app:main
