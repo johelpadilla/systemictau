@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "systemictau"
-version = "3.0.0"
+version = "4.0.0-dmg"
 description = "Systemic Tau and Discrete Extramental Clock (RECD) implementation"
 authors = [
     {name = "Johel Padilla-Villanueva", email = "joel.padilla2@upr.edu"}
