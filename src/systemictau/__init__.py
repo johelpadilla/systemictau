@@ -1,4 +1,4 @@
-__version__ = "3.0.0"
+__version__ = "3.1.0"
 from .core import compute_taus, systemic_tau, SystemicTauResult
 from .recd import compute_recd_increments, accumulate_time, gate_function
 from .layers import (
@@ -20,6 +20,7 @@ from .spatial import spatial_tau
 from .dengue import compute_dengue_outbreak_risk
 from .climate import detect_climate_tipping_points
 from .finance import compute_market_crash_risk
+from .nested import has_nested_recd, compute_nested_recd
 
 __all__ = [
     "systemic_tau",
@@ -42,12 +43,13 @@ __all__ = [
     "plot_joint_episodes",
     "plot_ontological_layers",
     "preprocess",
-
     "from_dataframe",
     "from_xarray",
     "evaluate_early_warning",
     "spatial_tau",
     "compute_dengue_outbreak_risk",
     "detect_climate_tipping_points",
-    "compute_market_crash_risk"
+    "compute_market_crash_risk",
+    "has_nested_recd",
+    "compute_nested_recd",
 ]

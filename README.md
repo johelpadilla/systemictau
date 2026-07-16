@@ -29,13 +29,36 @@ Detects the exact moment of global structural reorganization through Kolmogorov-
 ### From PyPI (Recommended)
 ```bash
 pip install systemictau
+# Level-3 nested ordinal RECD / continuous excess³:
+pip install "systemictau[nested]"   # pulls nested-recd>=0.2
 ```
 
 ### From Source
 ```bash
 git clone https://github.com/johelpadilla/systemictau
 cd systemictau
-pip install -e .
+pip install -e ".[nested,dev]"
+```
+
+### Two RECD notions (do not confuse)
+
+| Name | Where | What |
+|------|--------|------|
+| **Gate RECD** | `systemictau.recd` (`compute_recd_increments`, `accumulate_time`) | Discrete Extramental Clock from **τ_s** + Feigenbaum gate |
+| **Nested ordinal RECD / excess³** | `systemictau.nested` → package [`nested-recd`](https://pypi.org/project/nested-recd/) | Φ₁–Φ₃ on Bandt–Pompe symbols; **continuous excess³ = 0.6·Syn + 0.4·Surp** is primary Level-3 |
+
+Canonical Level-3 specification: [excess³ methods](https://doi.org/10.5281/zenodo.21385937) · [github.com/johelpadilla/excess3](https://github.com/johelpadilla/excess3)
+
+```python
+import numpy as np
+import systemictau as st
+
+X = np.random.randn(400, 3).cumsum(axis=0)
+taus, _ = st.compute_taus(X, window_size=13)
+
+if st.has_nested_recd():
+    nested = st.compute_nested_recd(X, tau_s=taus, m=3, theta3=0.10)
+    print("mean excess³:", float(np.nanmean(nested["excess3"])))
 ```
 
 ---
@@ -110,10 +133,11 @@ For users who prefer a graphical interface:
 
 | Repository | Purpose | Access |
 |---|---|---|
-| [`tau-sistemic`](https://github.com/johelpadilla/tau-sistemic) | Core theory (Spanish) | Public |
+| [`nested-recd`](https://github.com/johelpadilla/nested-recd) | Canonical Φ₁–Φ₃ + excess³ core | Public · PyPI |
+| [`excess3`](https://github.com/johelpadilla/excess3) | Methods + intro ES + primer | Public · Zenodo |
+| [`systemictau-web`](https://github.com/johelpadilla/systemictau-web) | Streamlit web app | Public |
 | [`tau-sistemic-dengue-ews`](https://github.com/johelpadilla/tau-sistemic-dengue-ews) | Applied case study | Public |
 | [`principle-of-ontological-ascent`](https://github.com/johelpadilla/principle-of-ontological-ascent) | Foundational theory | Public |
-| [`systemictau_v4`](https://github.com/johelpadilla/systemictau_v4) | Development branch | Private |
 
 ---
 
