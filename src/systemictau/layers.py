@@ -190,8 +190,11 @@ def detect_reorganization_frob(taus_matrix):
         if len(pre_X) < min_samples or len(post_X) < min_samples:
             continue
             
-        corr_pre = np.corrcoef(pre_X, rowvar=False)
-        corr_post = np.corrcoef(post_X, rowvar=False)
+        import warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            corr_pre = np.corrcoef(pre_X, rowvar=False)
+            corr_post = np.corrcoef(post_X, rowvar=False)
         
         dist = np.linalg.norm(corr_pre - corr_post, ord='fro')
         if dist > max_dist:

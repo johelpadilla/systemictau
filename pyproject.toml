@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "systemictau"
-version = "3.1.0"
+version = "4.6.0"
 description = "Systemic Tau, gate RECD, and optional nested ordinal excess³ (via nested-recd)"
 authors = [
     {name = "Johel Padilla-Villanueva", email = "joel.padilla2@upr.edu"}
@@ -21,11 +21,22 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Physics",
 ]
 dependencies = [
-    "numpy",
-    "scipy",
+    "numpy>=1.24.0",
+    "scipy>=1.10.0",
+    "pandas>=2.0.0",
+    "numba>=0.57.0",
+    "scikit-learn>=1.2.0",
+    "networkx>=3.0.0",
+    "matplotlib>=3.7.0"
 ]
 
 [project.optional-dependencies]
+reports = [
+    "Jinja2>=3.1.0",
+    "python-docx>=1.1.0",
+    "kaleido>=0.2.1",
+    "plotly>=5.0.0"
+]
 dev = ["pytest>=7.0.0", "pytest-cov>=4.0.0"]
 nested = ["nested-recd>=0.2.0"]
 visualization = ["matplotlib>=3.7", "seaborn"]
@@ -35,11 +46,13 @@ validation = ["scikit-learn"]
 performance = ["numba", "dask", "jax", "jaxlib", "pluggy"]
 ai = ["google-genai", "pydantic"]
 desktop = ["customtkinter"]
-full = ["matplotlib>=3.7", "seaborn", "pandas", "xarray", "streamlit", "typer", "fastapi", "uvicorn", "python-multipart", "geopandas", "libpysal", "scikit-learn", "numba", "dask", "folium", "streamlit-folium", "google-genai", "celery", "redis", "websockets", "pyjwt", "jax", "jaxlib", "faust-streaming", "neo4j", "pluggy", "python-rocksdb", "prometheus-client", "pydantic-settings", "tenacity", "aiokafka", "customtkinter", "nested-recd>=0.2.0"]
+studio = ["streamlit>=1.28", "matplotlib>=3.7", "pandas", "openpyxl", "pywebview"]
+full = ["matplotlib>=3.7", "seaborn", "pandas", "openpyxl", "xarray", "streamlit", "typer", "fastapi", "uvicorn", "python-multipart", "geopandas", "libpysal", "scikit-learn", "numba", "dask", "folium", "streamlit-folium", "google-genai", "celery", "redis", "websockets", "pyjwt", "jax", "jaxlib", "faust-streaming", "neo4j", "pluggy", "python-rocksdb", "prometheus-client", "pydantic-settings", "tenacity", "aiokafka", "customtkinter", "pywebview", "nested-recd>=0.2.0"]
 
 [project.scripts]
 systemictau = "systemictau.cli:app"
 systemictau-gui = "systemictau.desktop.app:main"
+systemictau-studio = "systemictau.studio.app:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

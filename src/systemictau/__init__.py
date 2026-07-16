@@ -1,4 +1,4 @@
-__version__ = "3.1.0"
+__version__ = "4.6.0"
 from .core import compute_taus, systemic_tau, SystemicTauResult
 from .recd import compute_recd_increments, accumulate_time, gate_function
 from .layers import (
@@ -12,6 +12,9 @@ from .layers import (
     consensus_transition
 )
 from .fractal import estimate_higuchi_dimension
+from .report import generate_academic_report
+from .panel import prepare_multivariate_timeseries, run_full_tau_analysis
+from .analysis import run_full_analysis, TauAnalysisResults
 from .generators import ChaosGenerator
 from .visualization import plot_tau_evolution, plot_joint_episodes, plot_ontological_layers
 from .data import preprocess, from_dataframe, from_xarray
@@ -22,10 +25,26 @@ from .climate import detect_climate_tipping_points
 from .finance import compute_market_crash_risk
 from .nested import has_nested_recd, compute_nested_recd
 
+# Studio (web) is heavy; import on demand to keep base light
+try:
+    from . import studio  # noqa: F401
+    HAS_STUDIO = True
+except Exception:
+    HAS_STUDIO = False
+
 __all__ = [
     "systemic_tau",
+    "__version__",
+    # Report Engine
+    "generate_academic_report",
     "SystemicTauResult",
     "compute_taus",
+    "run_full_tau_analysis",
+    "prepare_multivariate_timeseries",
+    # Orquestador del pipeline completo
+    "run_full_analysis",
+    "TauAnalysisResults",
+    # Gate RECD & Time Accumulation
     "compute_recd_increments",
     "accumulate_time",
     "gate_function",
@@ -50,6 +69,8 @@ __all__ = [
     "compute_dengue_outbreak_risk",
     "detect_climate_tipping_points",
     "compute_market_crash_risk",
+    # Nested ordinal RECD / continuous excess³ (requires nested-recd)
     "has_nested_recd",
     "compute_nested_recd",
+    "studio",
 ]
