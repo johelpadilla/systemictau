@@ -7,7 +7,7 @@ from systemictau import has_nested_recd, compute_nested_recd, __version__, run_f
 
 
 def test_version_bump():
-    assert __version__ == "4.6.0"
+    assert __version__ == "4.6.1"
 
 
 def test_has_nested_recd_bool():

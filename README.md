@@ -5,7 +5,9 @@
 
 **`systemictau`** implements the **Systemic Tau** paradigm and the **Discrete Extramental Clock (RECD)** for ordinal multivariate time-series analysis (early-warning, regime reorganization, multi-scale structure).
 
-**Current library version:** 4.6.0
+**Current library version:** 4.6.1
+
+4.6.1 imports `Union` in `panel.py` so `import systemictau` works on a cold install (4.6.0 raises `NameError`).
 
 ## Installation
 
