@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "systemictau"
-version = "4.6.0"
+version = "4.6.1"
 description = "Systemic Tau, gate RECD, and optional nested ordinal excess³ (via nested-recd)"
 authors = [
     {name = "Johel Padilla-Villanueva", email = "joel.padilla2@upr.edu"}
